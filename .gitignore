@@ -1,0 +1,20 @@
+# Hidden files
+.*
+
+# Prerequisites
+*.d
+
+# Object files
+*.o
+*.obj
+
+# Executables
+*.out
+server
+client
+
+# Debug files
+*.dSYM/
+
+# Files for testing
+*test*
