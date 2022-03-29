@@ -4,13 +4,20 @@
 #                                                                              #
 # ############################################################################ #
 
+SRCSDIR				= ./sources
+INCSDIR				= ./include
+
 SERVER				= server
-S_SRCS				= server.c utils.c
+S_SRCS				= $(addprefix $(SRCSDIR)/, \
+						server.c \
+						utils.c )
 S_OBJS				= $(S_SRCS:.c=.o)
 S_DEPS				= $(S_SRCS:.c=.d)
 
 CLIENT				= client
-C_SRCS				= client.c utils.c
+C_SRCS				= $(addprefix $(SRCSDIR)/, \
+						client.c \
+						utils.c )
 C_OBJS				= $(C_SRCS:.c=.o)
 C_DEPS				= $(C_SRCS:.c=.d)
 
@@ -19,7 +26,7 @@ NAME				= vk
 CC 					= gcc
 RM 					= rm -f
 CFLAGS				= -Wall -Wextra -Werror --pedantic #-g -fsanitize=address
-CPPFLAGS			= -MMD -I.
+CPPFLAGS			= -MMD -I$(INCSDIR)
 
 all:				server client
 
