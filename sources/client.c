@@ -45,6 +45,7 @@ int		create_client_socket(char *host)
 			continue ;
 		}
 		if (connect(sock, ap->ai_addr, ap->ai_addrlen) != -1) {
+			freeaddrinfo(addresses);
 			return sock;
 		}
 		close(sock);

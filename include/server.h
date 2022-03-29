@@ -1,7 +1,7 @@
 #ifndef SERVER_H
 # define SERVER_H
 
-# define _XOPEN_SOURCE 600
+# define _XOPEN_SOURCE	600
 
 # include <stdbool.h>
 # include <ctype.h>

@@ -37,8 +37,9 @@ int		create_server_socket(char *port)
 		if (sock == -1) {
 			continue ;
 		}
-		if (bind(sock, ap->ai_addr, ap->ai_addrlen) == 0 &&
-			listen(sock, BACKLOG_LIMIT) == 0) {
+		if (bind(sock, ap->ai_addr, ap->ai_addrlen) == 0
+			&& listen(sock, BACKLOG_LIMIT) == 0) {
+			freeaddrinfo(addresses);
 			return sock;
 		}
 		close(sock);
