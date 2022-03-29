@@ -21,19 +21,22 @@ C_SRCS				= $(addprefix $(SRCSDIR)/, \
 C_OBJS				= $(C_SRCS:.c=.o)
 C_DEPS				= $(C_SRCS:.c=.d)
 
-NAME				= vk
+# NAME				= vk
 
 CC 					= gcc
 RM 					= rm -f
-CFLAGS				= -Wall -Wextra -Werror --pedantic #-g -fsanitize=address
+CFLAGS				= -Wall -Wextra -Werror --pedantic -g #-fsanitize=address
 CPPFLAGS			= -MMD -I$(INCSDIR)
 
 all:				server client
 
-$(SERVER):			$(S_OBJS)
+$(S_OBJS):			Makefile
+$(C_OBJS):			Makefile
+
+$(SERVER):			$(S_OBJS) Makefile
 					$(CC) $(CFLAGS) $(S_OBJS) -o $(SERVER)
 
-$(CLIENT):			$(C_OBJS)
+$(CLIENT):			$(C_OBJS) Makefile
 					$(CC) $(CFLAGS) $(C_OBJS) -o $(CLIENT)
 
 $(NAME):			$(SERVER) $(CLIENT)
@@ -45,6 +48,13 @@ clean:
 
 fclean:				clean
 					$(RM) $(SERVER) $(CLIENT)
+
+leaks:				all
+					valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes \
+					./client localhost:4242 ~/.vimrc
+					@printf "\n"
+					valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes \
+					./server 4242 ~/Desktop
 
 re:					fclean all
 

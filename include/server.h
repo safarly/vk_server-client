@@ -1,24 +1,31 @@
 #ifndef SERVER_H
 # define SERVER_H
 
+# define _XOPEN_SOURCE 600
+
 # include <stdbool.h>
 # include <ctype.h>
 # include <limits.h>
 # include <stdio.h>
+# include <string.h>
 # include <unistd.h>
+# include <fcntl.h>
 # include <stdlib.h>
+# include <sys/socket.h>
 # include <sys/stat.h>
+# include <sys/types.h>
+# include <netdb.h>
 
 # include "colors.h"
+# include "errors.h"
 
-# define ERR_ARGC		"Wrong number of arguments\n"
-# define ERR_ISNUM		"Socket argument must be numerical\n"
-# define ERR_SOCK_LIM	"Socket limit has been exceeded (limit is 65535)\n"
-# define ERR_DIR		"Invalid directory\n"
-# define ERR_FILE		"Invalid file (is not a regular file)\n"
+# define BACKLOG_LIMIT	128
 
 void	check_arguments(int argc, char **argv);
 void	print_error(const char *err);
 bool	arg_is_numerical(const char *arg);
+int		create_client_socket(char *host);
+int		create_server_socket(char *port);
+char	*get_port(char *host);
 
 #endif

@@ -13,6 +13,6 @@ bool	arg_is_numerical(const char *arg)
 
 void	print_error(const char *err)
 {
-	dprintf(STDERR_FILENO, "%sError:%s %s", RED, RESET, err);
+	fprintf(stderr, "%s%sError:%s %s", BOLD, RED, RESET, err);
 	exit(EXIT_FAILURE);
 }
