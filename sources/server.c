@@ -1,21 +1,43 @@
 #include "server.h"
 
-void	create_file(int client)
+
+void	handle_name(int client, const char *save_dir, char *path_name)
 {
-	int		bytes_read;
 	char	buf_name[PATH_MAX];
 	size_t	namelen = 0;
 
-	bytes_read = read(client, &namelen, sizeof(namelen));
-	memset(buf_name, 0, sizeof(buf_name));
-	if (bytes_read < 0) {
+	memset(buf_name, 0, PATH_MAX);
+	memset(path_name, 0, PATH_MAX);
+	if (read(client, &namelen, sizeof(namelen)) < 0) {
 		print_error(strerror(errno));
 	}
-	bytes_read = read(client, buf_name, namelen);
-	if (bytes_read < 0) {
+	if (read(client, buf_name, namelen) < 0) {
 		print_error(strerror(errno));
 	}
-	printf("namelen - %zu, filename - %s\n", namelen, buf_name);
+	strcpy(path_name, save_dir);
+	strcat(path_name, "/");
+	strcat(path_name, buf_name);
+
+	printf("namelen - %zu, filename - %s\n", namelen, path_name);
+}
+
+void	receive_file(int client, char *save_dir)
+{
+	int		filefd;
+	char	path_name[PATH_MAX];
+	struct stat	file_stat;
+
+	if (read(client, &file_stat, sizeof(struct stat)) < 0) {
+		print_error(strerror(errno));
+	}
+	handle_name(client, save_dir, path_name);
+	filefd = open(path_name, O_CREAT | O_EXCL, file_stat.st_mode);
+	if (filefd < 0) {
+		// print_error(strerror(errno));
+		fprintf(stderr, "%s%sError:%s %s\n", BOLD, RED, RESET, strerror(errno));
+	}
+	// printf("namelen - %zu, filename - %s\n", namelen, path_name);
+	close(filefd);
 }
 
 int		main(int argc, char **argv) /* argv[1] - port, argv[2] - save dir */
@@ -32,8 +54,8 @@ int		main(int argc, char **argv) /* argv[1] - port, argv[2] - save dir */
 		// bytes_read = 0;
 		// count = 0;
 		if (client > 0) {
-			create_file(client);
 			printf("Client connected successfully\n");
+			receive_file(client, argv[2]);
 		}
 	}
 	return 0;

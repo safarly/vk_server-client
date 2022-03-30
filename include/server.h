@@ -21,9 +21,11 @@
 # include "errors.h"
 
 # define BACKLOG_LIMIT	128
+// # define EXIT			1
+// # define NOEXIT			0
 
 void	check_server_args(int argc, char **argv);
-size_t	check_client_args(int argc, char **argv);
+void	check_client_args(int argc, char **argv, struct stat *file_stat);
 void	print_error(const char *err);
 bool	arg_is_numerical(const char *arg);
 int		create_client_socket(char *host);
