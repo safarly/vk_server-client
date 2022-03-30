@@ -1,15 +1,38 @@
 #include "server.h"
 
+void	create_file(int client)
+{
+	int		bytes_read;
+	char	buf_name[PATH_MAX];
+	size_t	namelen = 0;
+
+	bytes_read = read(client, &namelen, sizeof(namelen));
+	memset(buf_name, 0, sizeof(buf_name));
+	if (bytes_read < 0) {
+		print_error(strerror(errno));
+	}
+	bytes_read = read(client, buf_name, namelen);
+	if (bytes_read < 0) {
+		print_error(strerror(errno));
+	}
+	printf("namelen - %zu, filename - %s\n", namelen, buf_name);
+}
+
 int		main(int argc, char **argv) /* argv[1] - port, argv[2] - save dir */
 {
-	int	server;
-	int	client;
+	int		server;
+	int		client;
+	// int		bytes_read;
+	// int		count;
 
-	check_arguments(argc, argv);
+	check_server_args(argc, argv);
 	server = create_server_socket(argv[1]);
 	while (true) {
 		client = accept(server, NULL, NULL);
+		// bytes_read = 0;
+		// count = 0;
 		if (client > 0) {
+			create_file(client);
 			printf("Client connected successfully\n");
 		}
 	}
@@ -51,7 +74,7 @@ int		create_server_socket(char *port)
 	return -1;
 }
 
-void	check_arguments(int argc, char **argv)
+void	check_server_args(int argc, char **argv)
 {
 	struct stat	file_stat;
 

@@ -2,18 +2,26 @@
 
 int		main(int argc, char **argv) /* argv[1] - server addr, argv[2] - file to send */
 {
-	int	fd;
-	int	client;
+	int		fd;
+	int		client;
+	char	*filename;
+	size_t	namelen;
+	size_t	filesize;
 
-	check_arguments(argc, argv);
+	filesize = check_client_args(argc, argv);
 	fd = open(argv[2], O_RDONLY);
 	if (fd < 0) {
 		perror(argv[0]);
 		return EXIT_FAILURE;
 	}
 	client = create_client_socket(argv[1]);
+	filename = get_filename(argv[2]);
+	namelen = strlen(filename);
+	printf("filename - %s, filesize - %zu\n", filename, filesize);
+	write(client, &namelen, sizeof(namelen));
+	write(client, filename, namelen);
+	// write(client, "\n", 1);
 	close(fd);
-(void)client;
 
 	return 0;
 }
@@ -70,7 +78,7 @@ char	*get_port(char *host)
 	return port;
 }
 
-void	check_arguments(int argc, char **argv)
+size_t	check_client_args(int argc, char **argv)
 {
 	struct stat	file_stat = (struct stat){ 0 };
 
@@ -81,4 +89,16 @@ void	check_arguments(int argc, char **argv)
 	if (!S_ISREG(file_stat.st_mode)) {
 		print_error(ERR_FILE);
 	}
+	return file_stat.st_size;
+}
+
+char	*get_filename(char *path)
+{
+	char	*filename = strrchr(path, '/');
+
+	if (filename == NULL) {
+		return path;
+	}
+	filename++;
+	return filename;
 }
