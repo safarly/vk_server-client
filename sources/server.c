@@ -1,13 +1,11 @@
 #include "server.h"
 
-
 void	handle_name(int client, const char *save_dir, char *path_name)
 {
 	char	buf_name[PATH_MAX];
 	size_t	namelen = 0;
 
 	memset(buf_name, 0, PATH_MAX);
-	memset(path_name, 0, PATH_MAX);
 	if (read(client, &namelen, sizeof(namelen)) < 0) {
 		print_error(strerror(errno));
 	}
@@ -18,7 +16,7 @@ void	handle_name(int client, const char *save_dir, char *path_name)
 	strcat(path_name, "/");
 	strcat(path_name, buf_name);
 
-	printf("namelen - %zu, filename - %s\n", namelen, path_name);
+	printf("filename - %s\n", path_name);
 }
 
 void	receive_file(int client, char *save_dir)
@@ -27,16 +25,19 @@ void	receive_file(int client, char *save_dir)
 	char	path_name[PATH_MAX];
 	struct stat	file_stat;
 
+	memset(path_name, 0, sizeof(path_name));
 	if (read(client, &file_stat, sizeof(struct stat)) < 0) {
 		print_error(strerror(errno));
 	}
 	handle_name(client, save_dir, path_name);
-	filefd = open(path_name, O_CREAT | O_EXCL, file_stat.st_mode);
+	filefd = open(path_name, O_CREAT | O_EXCL | O_WRONLY, file_stat.st_mode);
 	if (filefd < 0) {
 		// print_error(strerror(errno));
 		fprintf(stderr, "%s%sError:%s %s\n", BOLD, RED, RESET, strerror(errno));
+		return ;
 	}
-	// printf("namelen - %zu, filename - %s\n", namelen, path_name);
+	copy_data(client, filefd);
+	printf("File was %ssuccessfully%s saved\n", GREEN, RESET);
 	close(filefd);
 }
 
@@ -44,18 +45,16 @@ int		main(int argc, char **argv) /* argv[1] - port, argv[2] - save dir */
 {
 	int		server;
 	int		client;
-	// int		bytes_read;
-	// int		count;
 
 	check_server_args(argc, argv);
 	server = create_server_socket(argv[1]);
+	printf("Server has started and is listening on port %s\n", argv[1]);
 	while (true) {
 		client = accept(server, NULL, NULL);
-		// bytes_read = 0;
-		// count = 0;
 		if (client > 0) {
-			printf("Client connected successfully\n");
+			printf("Client connected\n");
 			receive_file(client, argv[2]);
+			close(client);
 		}
 	}
 	return 0;

@@ -21,6 +21,7 @@
 # include "errors.h"
 
 # define BACKLOG_LIMIT	128
+# define BUFF_SIZE		420
 // # define EXIT			1
 // # define NOEXIT			0
 
@@ -32,5 +33,6 @@ int		create_client_socket(char *host);
 int		create_server_socket(char *port);
 char	*get_port(char *host);
 char	*get_filename(char *path);
+void	copy_data(int source, int dest);
 
 #endif
