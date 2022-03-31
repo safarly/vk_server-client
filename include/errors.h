@@ -1,7 +1,8 @@
 #ifndef ERRORS_H
 # define ERRORS_H
 
-# define ERR_ARGC		"Wrong number of arguments (must be 2)"
+# define ERR_USAGE_SRV	"\033[1mUsage\033[0m: ./server port save_directory"
+# define ERR_USAGE_CLT	"\033[1mUsage\033[0m: ./client address:port file_path"
 # define ERR_ISNUM		"Socket argument must be numerical"
 # define ERR_SOCK_LIM	"Socket limit has been exceeded (limit is 65535)"
 # define ERR_DIR		"Invalid directory"

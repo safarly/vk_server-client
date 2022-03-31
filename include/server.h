@@ -1,8 +1,6 @@
 #ifndef SERVER_H
 # define SERVER_H
 
-# define _XOPEN_SOURCE	600
-
 # include <stdbool.h>
 # include <ctype.h>
 # include <limits.h>
@@ -21,7 +19,7 @@
 # include "errors.h"
 
 # define BACKLOG_LIMIT	128
-# define BUFF_SIZE		420
+# define BUFF_SIZE		4096
 // # define EXIT			1
 // # define NOEXIT			0
 

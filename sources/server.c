@@ -26,7 +26,7 @@ void	check_server_args(int argc, char **argv)
 
 	memset(&file_stat, 0, sizeof(file_stat));
 	if (argc != 3) {
-		print_error(ERR_ARGC);
+		print_error(ERR_USAGE_SRV);
 	}
 	if (!arg_is_numerical(argv[1])) {
 		print_error(ERR_ISNUM);

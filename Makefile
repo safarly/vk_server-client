@@ -25,7 +25,7 @@ C_DEPS				= $(C_SRCS:.c=.d)
 
 # NAME				= vk
 
-CC 					= gcc
+CC 					= clang
 RM 					= rm -f
 CFLAGS				= -Wall -Wextra -Werror --pedantic -g #-fsanitize=address
 CPPFLAGS			= -MMD -I$(INCSDIR)
@@ -35,8 +35,8 @@ all:				server client
 $(S_OBJS):			Makefile
 $(C_OBJS):			Makefile
 
-clang:				fclean
-					make CC=clang all
+gcc:				fclean
+					make CC=gcc all
 
 noflags:			fclean
 					make CFLAGS="" all

@@ -28,7 +28,7 @@ void	check_client_args(int argc, char **argv, struct stat *file_stat)
 {
 	memset(file_stat, 0, sizeof(struct stat));
 	if (argc != 3) {
-		print_error(ERR_ARGC);
+		print_error(ERR_USAGE_CLT);
 	}
 	stat(argv[2], file_stat);
 	if (!S_ISREG(file_stat->st_mode)) {
