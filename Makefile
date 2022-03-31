@@ -10,6 +10,7 @@ INCSDIR				= ./include
 SERVER				= server
 S_SRCS				= $(addprefix $(SRCSDIR)/, \
 						server.c \
+						sockets.c \
 						utils.c )
 S_OBJS				= $(S_SRCS:.c=.o)
 S_DEPS				= $(S_SRCS:.c=.d)
@@ -17,6 +18,7 @@ S_DEPS				= $(S_SRCS:.c=.d)
 CLIENT				= client
 C_SRCS				= $(addprefix $(SRCSDIR)/, \
 						client.c \
+						sockets.c \
 						utils.c )
 C_OBJS				= $(C_SRCS:.c=.o)
 C_DEPS				= $(C_SRCS:.c=.d)
@@ -35,6 +37,9 @@ $(C_OBJS):			Makefile
 
 clang:				fclean
 					make CC=clang all
+
+noflags:			fclean
+					make CFLAGS="" all
 
 $(SERVER):			$(S_OBJS) Makefile
 					$(CC) $(CFLAGS) $(S_OBJS) -o $(SERVER)
