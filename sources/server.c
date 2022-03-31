@@ -8,7 +8,8 @@ int		main(int argc, char **argv) /* argv[1] - port, argv[2] - save dir */
 	check_server_args(argc, argv);
 	server = create_server_socket(argv[1]);
 	printf("Server has started and is listening on port %s\n", argv[1]);
-	while (true) {
+	while (true)
+	{
 		client = accept(server, NULL, NULL);
 		if (client > 0) {
 			printf("Client connected\n");

@@ -8,7 +8,8 @@ void	copy_data(int source, int dest)
 	char	buffer[BUFF_SIZE];
 
 	memset(buffer, 0, sizeof(buffer));
-	while (true) {
+	while (true)
+	{
 		bytes_read = read(source, buffer, sizeof(buffer));
 		if (bytes_read < 0) {
 			print_error(strerror(errno));
@@ -17,7 +18,8 @@ void	copy_data(int source, int dest)
 			break ;
 		}
 		bytes_written = 0;
-		while (bytes_written < bytes_read) {
+		while (bytes_written < bytes_read)
+		{
 			count = write(dest, buffer + bytes_written, bytes_read - bytes_written);
 			if (count < 0) {
 				print_error(strerror(errno));
@@ -35,7 +37,8 @@ void	print_error(const char *err)
 
 bool	arg_is_numerical(const char *arg)
 {
-	while (*arg) {
+	while (*arg)
+	{
 		if (!isdigit(*arg)) {
 			return false;
 		}
