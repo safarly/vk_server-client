@@ -27,6 +27,12 @@ void	copy_data(int source, int dest)
 	}
 }
 
+void	print_error(const char *err)
+{
+	fprintf(stderr, "%s%sError:%s %s\n", BOLD, RED, RESET, err);
+	exit(EXIT_FAILURE);
+}
+
 bool	arg_is_numerical(const char *arg)
 {
 	while (*arg) {
@@ -36,10 +42,4 @@ bool	arg_is_numerical(const char *arg)
 		arg++;
 	}
 	return true;
-}
-
-void	print_error(const char *err)
-{
-	fprintf(stderr, "%s%sError:%s %s\n", BOLD, RED, RESET, err);
-	exit(EXIT_FAILURE);
 }
