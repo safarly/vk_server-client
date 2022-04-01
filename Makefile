@@ -27,19 +27,13 @@ C_DEPS				= $(C_SRCS:.c=.d)
 
 CC 					= clang
 RM 					= rm -f
-CFLAGS				= -Wall -Wextra -Werror --pedantic -g #-fsanitize=address
+CFLAGS				= -Wall -Wextra -Werror --pedantic #-g -fsanitize=address
 CPPFLAGS			= -MMD -I$(INCSDIR)
 
 all:				server client
 
 $(S_OBJS):			Makefile
 $(C_OBJS):			Makefile
-
-gcc:				fclean
-					make CC=gcc all
-
-noflags:			fclean
-					make CFLAGS="" all
 
 $(SERVER):			$(S_OBJS) Makefile
 					$(CC) $(CFLAGS) $(S_OBJS) -o $(SERVER)
@@ -50,6 +44,15 @@ $(CLIENT):			$(C_OBJS) Makefile
 $(NAME):			$(SERVER) $(CLIENT)
 
 -include			$(S_DEPS) $(C_DEPS)
+
+gcc:				fclean
+					make CC=gcc all
+
+noflags:			fclean
+					make CFLAGS="" all
+
+debug:				fclean
+					make CFLAGS=-g all
 
 clean:
 					$(RM) $(S_OBJS) $(S_DEPS) $(C_OBJS) $(C_DEPS)

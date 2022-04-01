@@ -15,6 +15,7 @@ int		create_server_socket(char *port)
 	addr_status = getaddrinfo(NULL, port, &hints, &addresses);
 	if (addr_status) {
 		print_error(gai_strerror(addr_status));
+		return -1;
 	}
 	for (ap = addresses; ap != NULL; ap = ap->ai_next) {
 		sock = socket(ap->ai_family, ap->ai_socktype, ap->ai_protocol);
@@ -29,9 +30,7 @@ int		create_server_socket(char *port)
 		close(sock);
 	}
 	freeaddrinfo(addresses);
-	if (ap == NULL) {
-		print_error(ERR_BIND);
-	}
+	print_error(ERR_BIND);
 	return -1;
 }
 
@@ -46,6 +45,7 @@ int		create_client_socket(char *host)
 
 	if (port == NULL) {
 		print_error(ERR_PORT);
+		return -1;
 	}
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_UNSPEC;
@@ -55,6 +55,7 @@ int		create_client_socket(char *host)
 	addr_status = getaddrinfo(hostaddr, port, &hints, &addresses);
 	if (addr_status) {
 		print_error(gai_strerror(addr_status));
+		return -1;
 	}
 	for (ap = addresses; ap != NULL; ap = ap->ai_next) {
 		sock = socket(ap->ai_family, ap->ai_socktype, ap->ai_protocol);
@@ -65,12 +66,11 @@ int		create_client_socket(char *host)
 			freeaddrinfo(addresses);
 			return sock;
 		}
+		// print_error(strerror(errno));
 		close(sock);
 	}
 	freeaddrinfo(addresses);
-	if (ap == NULL) {
-		print_error(ERR_CONNECT);
-	}
+	print_error(ERR_CONNECT);
 	return -1;
 	// printf("address - %s, port - %s %d\n", hostaddr, port, hints.ai_family);
 }
