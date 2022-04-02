@@ -14,17 +14,28 @@
 # include <sys/stat.h>
 # include <sys/types.h>
 # include <netdb.h>
+# include <sys/epoll.h>
 
 # include "colors.h"
 # include "errors.h"
 
 # define BACKLOG_LIMIT	128
 # define BUFF_SIZE		4096
+# define MAX_EVENTS		128
+
+struct client_data
+{
+	int					socket;
+	struct epoll_event	epev;
+	char				path_name[PATH_MAX];
+	struct stat			file_stat;
+};
+
 
 //		server.c
 int		check_server_args(int argc, char **argv);
-int		receive_file(int client, char *save_dir);
-int		handle_name(int client, const char *save_dir, char *path_name);
+int		receive_file(struct client_data *client, char *save_dir);
+int		handle_name(struct client_data *client, const char *save_dir);
 
 //		client.c
 int		check_client_args(int argc, char **argv, struct stat *file_stat);

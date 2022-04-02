@@ -17,18 +17,22 @@ int		create_server_socket(char *port)
 		print_error(gai_strerror(addr_status));
 		return -1;
 	}
+
 	for (ap = addresses; ap != NULL; ap = ap->ai_next) {
 		sock = socket(ap->ai_family, ap->ai_socktype, ap->ai_protocol);
 		if (sock == -1) {
 			continue ;
 		}
+
 		if (bind(sock, ap->ai_addr, ap->ai_addrlen) == 0
 			&& listen(sock, BACKLOG_LIMIT) == 0) {
 			freeaddrinfo(addresses);
 			return sock;
 		}
+
 		close(sock);
 	}
+
 	freeaddrinfo(addresses);
 	print_error(ERR_BIND);
 	return -1;
@@ -47,6 +51,7 @@ int		create_client_socket(char *host)
 		print_error(ERR_PORT);
 		return -1;
 	}
+
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
@@ -57,11 +62,13 @@ int		create_client_socket(char *host)
 		print_error(gai_strerror(addr_status));
 		return -1;
 	}
+
 	for (ap = addresses; ap != NULL; ap = ap->ai_next) {
 		sock = socket(ap->ai_family, ap->ai_socktype, ap->ai_protocol);
 		if (sock == -1) {
 			continue ;
 		}
+
 		if (connect(sock, ap->ai_addr, ap->ai_addrlen) != -1) {
 			freeaddrinfo(addresses);
 			return sock;
@@ -69,6 +76,7 @@ int		create_client_socket(char *host)
 		// print_error(strerror(errno));
 		close(sock);
 	}
+
 	freeaddrinfo(addresses);
 	print_error(ERR_CONNECT);
 	return -1;
@@ -82,6 +90,7 @@ char	*get_port(char *host)
 	if (port == NULL) {
 		return NULL;
 	}
+
 	*port = '\0';
 	port++;
 	return port;

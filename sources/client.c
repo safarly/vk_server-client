@@ -9,27 +9,32 @@ int		main(int argc, char **argv) /* argv[1] - server addr, argv[2] - file to sen
 	if (check_client_args(argc, argv, &file_stat) < 0) {
 		return EXIT_FAILURE;
 	}
+
 	server = create_client_socket(argv[1]);
 	if (server < 0) {
 		return EXIT_FAILURE;
 	}
+
 	if (write(server, &file_stat, sizeof(struct stat)) < 0) {
 		close(server);
 		print_error(strerror(errno));
 		return EXIT_FAILURE;
 	}
+
 	filefd = open(argv[2], O_RDONLY);
 	if (filefd < 0) {
 		print_error(strerror(errno));
 		close(server);
 		return EXIT_FAILURE;
 	}
+
 	if (send_file(server, filefd, argv) < 0) {
 		close(filefd);
 		close(server);
 		print_error(strerror(errno));
 		return EXIT_FAILURE;
 	}
+
 	printf("File was %ssuccessfully%s sent\n", GREEN, RESET);
 	close(filefd);
 	close(server);
@@ -44,11 +49,13 @@ int		check_client_args(int argc, char **argv, struct stat *file_stat)
 		fprintf(stderr, ERR_USAGE_CLT);
 		return -1;
 	}
+
 	stat(argv[2], file_stat);
 	if (!S_ISREG(file_stat->st_mode)) {
 		print_error(ERR_FILE);
 		return -1;
 	}
+
 	return 1;
 }
 
@@ -62,9 +69,11 @@ int		send_file(int server, int file, char **argv)
 	if (write(server, &namelen, sizeof(namelen)) < 0) {
 		return -1;
 	}
+
 	if (write(server, file_name, namelen) < 0) {
 		return -1;
 	}
+
 	if (copy_data(file, server) < 0) {
 		return -1;
 	}
@@ -82,6 +91,7 @@ char	*get_filename(char *path)
 	if (filename == NULL) {
 		return path;
 	}
+
 	filename++;
 	return filename;
 }
