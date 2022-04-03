@@ -33,8 +33,10 @@
 
 struct file_info
 {
-	char				name[NAME_MAX];
-	size_t				size;
+	// char				name[NAME_MAX];
+	size_t				namelen;
+	// size_t				size;
+	struct stat			file_stat;
 };
 
 struct client_data
@@ -51,10 +53,12 @@ struct client_data
 };
 
 
+int		set_socket_nonblock(int socket);
+
 //		server.c
 int		check_server_args(int argc, char **argv);
 int		receive_file(struct client_data *client, char *save_dir);
-int		handle_name(struct client_data *client, const char *save_dir);
+int		handle_name(int client, const char *save_dir, char *path_name);
 
 //		client.c
 int		check_client_args(int argc, char **argv, struct stat *file_stat);

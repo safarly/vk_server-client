@@ -5,9 +5,11 @@ int		main(int argc, char **argv) /* argv[1] - server addr, argv[2] - file to sen
 	int		filefd;
 	int		server;
 	struct file_info	file;
-	struct stat			file_stat;
+	// struct stat			file_stat;
 
-	if (check_client_args(argc, argv, &file_stat) < 0) {
+	memset(&file, 0, sizeof(struct file_info));
+
+	if (check_client_args(argc, argv, &file.file_stat) < 0) {
 		return EXIT_FAILURE;
 	}
 
@@ -22,17 +24,20 @@ int		main(int argc, char **argv) /* argv[1] - server addr, argv[2] - file to sen
 	// 	return EXIT_FAILURE;
 	// }
 
-	memset(&file, 0, sizeof(struct file_info));
-	file.size = 21;
+
+	// file.size = 21;
 	if (write(server, &file, sizeof(struct file_info)) < 0) {
+		close(server);
 		print_error(strerror(errno));
+		return EXIT_FAILURE;
 	}
+
 	printf("file_info was sent, struct size %zu\n", sizeof(file));
 
 	filefd = open(argv[2], O_RDONLY);
 	if (filefd < 0) {
-		print_error(strerror(errno));
 		close(server);
+		print_error(strerror(errno));
 		return EXIT_FAILURE;
 	}
 
@@ -44,7 +49,7 @@ int		main(int argc, char **argv) /* argv[1] - server addr, argv[2] - file to sen
 	}
 
 	shutdown(server, SHUT_RDWR);
-char check_buf[10];
+char check_buf[1];
 	int socket_check = read(server, check_buf, 1);
 	printf("%d - check read from socket\n", socket_check);
 

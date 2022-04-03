@@ -1,5 +1,14 @@
 #include "server.h"
 
+int		set_socket_nonblock(int socket)
+{
+	if (fcntl(socket, F_SETFL, fcntl(socket, F_GETFL) | O_NONBLOCK) < 0) {
+		print_error(strerror(errno));
+		return -1;
+	}
+	return 1;
+}
+
 int		create_server_socket(char *port)
 {
 	int		sock;
@@ -25,7 +34,8 @@ int		create_server_socket(char *port)
 		}
 
 		if (bind(sock, ap->ai_addr, ap->ai_addrlen) == 0
-			&& listen(sock, BACKLOG_LIMIT) == 0) {
+			&& listen(sock, BACKLOG_LIMIT) == 0
+			&& set_socket_nonblock(sock) != -1) {
 			freeaddrinfo(addresses);
 			return sock;
 		}
