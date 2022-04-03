@@ -8,7 +8,6 @@ int		set_server_event(int epfd, int server)
 	server_event.events = EPOLLIN | EPOLLET;
 
 	if (epoll_ctl(epfd, EPOLL_CTL_ADD, server, &server_event) < 0) {
-		print_error(strerror(errno));
 		return -1;
 	}
 
@@ -24,13 +23,11 @@ int		set_signal_event(int epfd, int *sigfd)
 	sigaddset(&mask, SIGINT);
 
 	if (sigprocmask(SIG_BLOCK, &mask, NULL) == -1) {
-		print_error(strerror(errno));
 		return -1;
 	}
 
 	*sigfd = signalfd(-1, &mask, SFD_NONBLOCK);
 	if (*sigfd == -1) {
-		print_error(strerror(errno));
 		return -1;
 	}
 
@@ -38,17 +35,79 @@ int		set_signal_event(int epfd, int *sigfd)
 	signal_event.events = EPOLLIN; // check edge trigger or level
 
 	if (epoll_ctl(epfd, EPOLL_CTL_ADD, *sigfd, &signal_event) < 0) {
-		print_error(strerror(errno));
 		return -1;
 	}
 
 	return 1;
 }
 
+int		set_epoll_and_events(int server, int *sigfd)
+{
+	int		epfd;
+
+	epfd = epoll_create1(0);
+	if (epfd < 0) {
+		return -1;
+	}
+
+	if (set_server_event(epfd, server) < 0) {
+		return -1;
+	}
+
+	if (set_signal_event(epfd, sigfd) < 0) {
+		return -1;
+	}
+
+	return epfd;
+}
+
+client_data	*client_data_init(int client)
+{
+	client_data	*client_data = malloc(sizeof(client_data));
+	if (client_data == NULL) {
+		return NULL;
+	}
+
+	client_data->socket = client;
+	client_data->epev.data.ptr = client_data;
+	client_data->epev.events = EPOLLIN | EPOLLRDHUP | EPOLLHUP | EPOLLET;
+	client_data->bytes_read = 0;
+	client_data->count = 0;
+	return client_data;
+}
+
+int		accept_new_client(int epfd, int server)
+{
+	int		client;
+	client_data	*client_data;
+
+	client = accept(server, NULL, NULL); //accept needs to be in while loop or check if EPOLLET or EPOLL LEVEL TRIGGEREd needed
+	if (client < 0) {
+		print_error(strerror(errno));
+		return -1;
+	}
+	// log(0, "blaak %f", 34); update printe_error with variadic args
+
+	else {
+		client_data = client_data_init(client);
+		if (client_data == NULL) {
+			print_error(strerror(errno));
+			return -1;
+		}
+
+	// memset(client_data->path_name, 0, sizeof(client_data->path_name));
+
+		set_socket_nonblock(client);
+		epoll_ctl(epfd, EPOLL_CTL_ADD, client, &client_data->epev);
+		printf("Client connected\n");
+	}
+	return 1;
+}
+
 int		main(int argc, char **argv) /* argv[1] - port, argv[2] - save dir */
 {
 	int		server;
-	int		client;
+	// int		client;
 	int		epfd;
 	int		sigfd;
 	int		event_count = 0;
@@ -63,17 +122,9 @@ int		main(int argc, char **argv) /* argv[1] - port, argv[2] - save dir */
 		return EXIT_FAILURE;
 	}
 
-	epfd = epoll_create1(0);
+	epfd = set_epoll_and_events(server, &sigfd);
 	if (epfd < 0) {
 		print_error(strerror(errno));
-		return EXIT_FAILURE;
-	}
-
-	if (set_server_event(epfd, server) < 0) {
-		return EXIT_FAILURE;
-	}
-
-	if (set_signal_event(epfd, &sigfd) < 0) {
 		return EXIT_FAILURE;
 	}
 
@@ -89,33 +140,12 @@ int		main(int argc, char **argv) /* argv[1] - port, argv[2] - save dir */
 
 		for (int i = 0; i < event_count; i++) {
 			if (events[i].data.fd == server) {
-				client = accept(server, NULL, NULL); //accept needs to be in while loop or check if EPOLLET or EPOLL LEVEL TRIGGEREd needed
-				if (client < 0) {
-					print_error(strerror(errno));
+				if (accept_new_client(epfd, server) < 0) {
 					continue ;
-				}
-
-				// log(0, "blaak %f", 34);
-				// update printe_error with variadic args
-
-				else {
-					struct client_data *client_data = malloc(sizeof(struct client_data));
-					client_data->socket = client;
-					client_data->epev.data.ptr = client_data;
-					client_data->epev.events = EPOLLIN | EPOLLRDHUP | EPOLLHUP | EPOLLET;
-					client_data->bytes_read = 0;
-					client_data->count = 0;
-
-				// memset(client_data->path_name, 0, sizeof(client_data->path_name));
-
-					set_socket_nonblock(client);
-					epoll_ctl(epfd, EPOLL_CTL_ADD, client, &client_data->epev);
-					printf("Client connected\n");
 				}
 			}
 
 			else if (events[i].data.fd == sigfd) {
-
 				printf("\nInterrupted!\n");
 				// free memory
 				// close fds
@@ -125,18 +155,18 @@ int		main(int argc, char **argv) /* argv[1] - port, argv[2] - save dir */
 			}
 
 			else {
-				struct client_data *client_data = events[i].data.ptr;
+				client_data *client_data = events[i].data.ptr;
 
 				if (events[i].events & EPOLLIN) {	// read from client sock
 					printf("Read data from client\n");
 					// ssize_t	count = 0, bytes_read = 0, bytes_written = 0;
 					// int file = open("~/Desktop/sendto/test.txt", O_CREAT | O_TRUNC | O_RDWR);
 				// int count could be mad on stack
-					while (client_data->bytes_read < sizeof(struct file_info))
+					while (client_data->bytes_read < sizeof(file_info))
 					{
 						client_data->count = read(client_data->socket,
 							((char *)&client_data->file) + client_data->bytes_read,
-							sizeof(struct file_info) - client_data->bytes_read);
+							sizeof(file_info) - client_data->bytes_read);
 						if (client_data->count < 0) {
 							if (errno != EAGAIN) {
 								print_error(strerror(errno));
@@ -156,7 +186,7 @@ int		main(int argc, char **argv) /* argv[1] - port, argv[2] - save dir */
 							return -1;
 						}
 						client_data->bytes_read += client_data->count;
-						if (client_data->bytes_read == sizeof(struct file_info)) {
+						if (client_data->bytes_read == sizeof(file_info)) {
 							// client_data->bytes_read = 0;
 							// client_data->count = 0;
 
@@ -175,7 +205,7 @@ int		main(int argc, char **argv) /* argv[1] - port, argv[2] - save dir */
 
 				if (events[i].events & (EPOLLHUP | EPOLLRDHUP)) { // close client socket and free struct cl_ev
 					printf("Client closed\n");
-					// struct client_data *client_to_close = events[i].data.ptr;
+					// client_data *client_to_close = events[i].data.ptr;
 					close(client_data->socket);
 					close(client_data->filefd);
 					free(client_data);
@@ -251,7 +281,7 @@ int		check_server_args(int argc, char **argv)
 	return 1;
 }
 
-// int		receive_file(struct client_data *client, char *save_dir)
+// int		receive_file(client_data *client, char *save_dir)
 // {
 // 	int		filefd;
 	// char	path_name[PATH_MAX];
@@ -321,7 +351,7 @@ int		handle_name(int client, const char *save_dir, char *path_name)
 }
 
 
-// int		handle_name(struct client_data *client, const char *save_dir)
+// int		handle_name(client_data *client, const char *save_dir)
 // {
 // 	char	buf_name[NAME_MAX];
 // 	size_t	namelen = 0;

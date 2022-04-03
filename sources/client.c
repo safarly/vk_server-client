@@ -4,10 +4,10 @@ int		main(int argc, char **argv) /* argv[1] - server addr, argv[2] - file to sen
 {
 	int		filefd;
 	int		server;
-	struct file_info	file;
+	file_info	file;
 	// struct stat			file_stat;
 
-	memset(&file, 0, sizeof(struct file_info));
+	memset(&file, 0, sizeof(file_info));
 
 	if (check_client_args(argc, argv, &file.file_stat) < 0) {
 		return EXIT_FAILURE;
@@ -26,7 +26,7 @@ int		main(int argc, char **argv) /* argv[1] - server addr, argv[2] - file to sen
 
 
 	// file.size = 21;
-	if (write(server, &file, sizeof(struct file_info)) < 0) {
+	if (write(server, &file, sizeof(file_info)) < 0) {
 		close(server);
 		print_error(strerror(errno));
 		return EXIT_FAILURE;

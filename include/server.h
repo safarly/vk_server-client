@@ -18,12 +18,6 @@
 # include <sys/signalfd.h>
 # include <signal.h>
 
-    //    #include <sys/signalfd.h>
-    //    #include <signal.h>
-    //    #include <unistd.h>
-    //    #include <stdlib.h>
-    //    #include <stdio.h>
-
 # include "colors.h"
 # include "errors.h"
 
@@ -31,15 +25,15 @@
 # define BUFF_SIZE		4096
 # define MAX_EVENTS		128
 
-struct file_info
+typedef	struct	file_info
 {
 	// char				name[NAME_MAX];
 	size_t				namelen;
 	// size_t				size;
 	struct stat			file_stat;
-};
+}				file_info;
 
-struct client_data
+typedef	struct	client_data
 {
 	int					socket;
 	struct epoll_event	epev;
@@ -50,7 +44,7 @@ struct client_data
 	ssize_t	count;
 
 	int		filefd;
-};
+}				client_data;
 
 
 int		set_socket_nonblock(int socket);
