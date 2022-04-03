@@ -44,15 +44,10 @@ int		main(int argc, char **argv) /* argv[1] - port, argv[2] - save dir */
 
 		for (int i = 0; i < event_count; i++) {
 			if (events[i].data.fd == server) {
-				client = accept(server, NULL, NULL);
+				client = accept(server, NULL, NULL); //accept needs to be in while loop or check if EPOLLET or EPOLL LEVEL TRIGGEREd needed
 				if (client < 0) {
-					if (errno == EWOULDBLOCK || errno == EAGAIN) {
-						printf("accept returned EAGAIN or EWOULDBLOCK\n");
-					}
-					else {
-						print_error(strerror(errno));
-						continue ;
-					}
+					print_error(strerror(errno));
+					continue ;
 				}
 
 				else {
@@ -66,7 +61,7 @@ int		main(int argc, char **argv) /* argv[1] - port, argv[2] - save dir */
 					if (client_data->filefd < 0) {
 						perror("open");
 					}
-				memset(client_data->path_name, 0, sizeof(client_data->path_name));
+				// memset(client_data->path_name, 0, sizeof(client_data->path_name));
 
 					set_socket_nonblock(client);
 					epoll_ctl(epfd, EPOLL_CTL_ADD, client, &client_data->epev);
@@ -81,6 +76,34 @@ int		main(int argc, char **argv) /* argv[1] - port, argv[2] - save dir */
 					printf("Read data from client\n");
 					// ssize_t	count = 0, bytes_read = 0, bytes_written = 0;
 					// int file = open("~/Desktop/sendto/test.txt", O_CREAT | O_TRUNC | O_RDWR);
+				// int count could be mad on stack
+					while (client_data->bytes_read < sizeof(struct file_info))
+					{
+						client_data->count = read(client_data->socket,
+							((char *)&client_data->file) + client_data->bytes_read,
+							sizeof(struct file_info) - client_data->bytes_read);
+						if (client_data->count < 0) {
+							if (errno != EAGAIN) {
+								print_error(strerror(errno));
+								// destroy client
+								// close connection]]
+								// this is an error, return -1
+							}
+
+							else {
+								break ;
+							}
+						}
+						if (client_data->count == 0) {
+							// destroy client
+							// close connection
+							// this is an error, return -1
+							return -1;
+						}
+						client_data->bytes_read += client_data->count;
+					}
+					printf("file_info was read, struct size %zu\n", sizeof(client_data->file));
+
 					copy_data(client_data->socket, client_data->filefd);
 				}
 
@@ -172,93 +195,93 @@ int		receive_file(struct client_data *client, char *save_dir)
 	// ssize_t	bytes_read = 0;
 	// ssize_t	count = 0;
 
-	while (true)
-	{
-		client->count = read(client->socket, &client->file_stat + client->bytes_read, sizeof(struct stat) - client->bytes_read);
-		if (client->count == 0) {
-			break ;
-		}
-		client->bytes_read += client->count;
-	}
-	printf("%ld file size\n", client->file_stat.st_size);
+	// while (true)
+	// {
+	// 	client->count = read(client->socket, &client->file_stat + client->bytes_read, sizeof(struct stat) - client->bytes_read);
+	// 	if (client->count == 0) {
+	// 		break ;
+	// 	}
+	// 	client->bytes_read += client->count;
+	// }
+	// printf("%ld file size\n", client->file_stat.st_size);
 
 	// if (read(client->socket, &client->file_stat, sizeof(struct stat)) < 0) {
 	// 	return -1;
 	// }
-(void)save_dir;
+// (void)save_dir;
 	// if (handle_name(client, save_dir) < 0) {
 	// 	return -1;
 	// }
 											//  O_EXCL
-	filefd = open("~/Desktop/sendto", O_CREAT | O_TRUNC | O_WRONLY, client->file_stat.st_mode);
-	if (filefd < 0) {
-		return -1;
-	}
-
-	if (copy_data(client->socket, filefd) < 0) {
-		close(filefd);
-		return -1;
-	}
-
-	printf("File was %ssuccessfully%s saved\n", GREEN, RESET);
-	close(filefd);
-	return 1;
-}
-
-int		handle_name(struct client_data *client, const char *save_dir)
-{
-	char	buf_name[NAME_MAX];
-	size_t	namelen = 0;
-
-	ssize_t	bytes_read = 0;
-	ssize_t	count = 0;
-
-	memset(buf_name, 0, sizeof(buf_name));
-
-	bytes_read = 0;
-	count = 0;
-
-	while (true)
-	{
-		count = read(client->socket, &namelen + bytes_read, sizeof(size_t) - bytes_read);
-		if (count == 0) {
-			break ;
-		}
-		bytes_read += count;
-	}
-	printf("%ld namelen\n", namelen);
-
-	// if (read(client->socket, &namelen, sizeof(namelen)) < 0) {
+	// filefd = open("~/Desktop/sendto", O_CREAT | O_TRUNC | O_WRONLY, client->file_stat.st_mode);
+	// if (filefd < 0) {
 	// 	return -1;
 	// }
 
-	bytes_read = 0;
-	count = 0;
-
-	while (true)
-	{
-		count = read(client->socket, &buf_name + bytes_read, namelen - bytes_read);
-		if (count == 0) {
-			break ;
-		}
-		bytes_read += count;
-	}
-	printf("%s buf_name\n", buf_name);
-
-	// if (read(client->socket, buf_name, namelen) < 0) {
+	// if (copy_data(client->socket, filefd) < 0) {
+	// 	close(filefd);
 	// 	return -1;
 	// }
 
-	if (strchr(buf_name, '/')) {
-		return print_error(ERR_FILENAME);
-	}
-
-	strcpy(client->path_name, save_dir);
-	if (client->path_name[strlen(client->path_name) - 1] != '/') {
-		strcat(client->path_name, "/");
-	}
-
-	strcat(client->path_name, buf_name);
-	printf("file - \'%s\'\n", client->path_name);
+	// printf("File was %ssuccessfully%s saved\n", GREEN, RESET);
+	// close(filefd);
 	return 1;
 }
+
+// int		handle_name(struct client_data *client, const char *save_dir)
+// {
+// 	char	buf_name[NAME_MAX];
+// 	size_t	namelen = 0;
+
+// 	ssize_t	bytes_read = 0;
+// 	ssize_t	count = 0;
+
+// 	memset(buf_name, 0, sizeof(buf_name));
+
+// 	bytes_read = 0;
+// 	count = 0;
+
+// 	while (true)
+// 	{
+// 		count = read(client->socket, &namelen + bytes_read, sizeof(size_t) - bytes_read);
+// 		if (count == 0) {
+// 			break ;
+// 		}
+// 		bytes_read += count;
+// 	}
+// 	printf("%ld namelen\n", namelen);
+
+// 	// if (read(client->socket, &namelen, sizeof(namelen)) < 0) {
+// 	// 	return -1;
+// 	// }
+
+// 	bytes_read = 0;
+// 	count = 0;
+
+// 	while (true)
+// 	{
+// 		count = read(client->socket, &buf_name + bytes_read, namelen - bytes_read);
+// 		if (count == 0) {
+// 			break ;
+// 		}
+// 		bytes_read += count;
+// 	}
+// 	printf("%s buf_name\n", buf_name);
+
+// 	// if (read(client->socket, buf_name, namelen) < 0) {
+// 	// 	return -1;
+// 	// }
+
+// 	if (strchr(buf_name, '/')) {
+// 		return print_error(ERR_FILENAME);
+// 	}
+
+// 	strcpy(client->path_name, save_dir);
+// 	if (client->path_name[strlen(client->path_name) - 1] != '/') {
+// 		strcat(client->path_name, "/");
+// 	}
+
+// 	strcat(client->path_name, buf_name);
+// 	printf("file - \'%s\'\n", client->path_name);
+// 	return 1;
+// }

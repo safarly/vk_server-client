@@ -4,7 +4,8 @@ int		main(int argc, char **argv) /* argv[1] - server addr, argv[2] - file to sen
 {
 	int		filefd;
 	int		server;
-	struct stat	file_stat;
+	struct file_info	file;
+	struct stat			file_stat;
 
 	if (check_client_args(argc, argv, &file_stat) < 0) {
 		return EXIT_FAILURE;
@@ -20,6 +21,13 @@ int		main(int argc, char **argv) /* argv[1] - server addr, argv[2] - file to sen
 	// 	print_error(strerror(errno));
 	// 	return EXIT_FAILURE;
 	// }
+
+	memset(&file, 0, sizeof(struct file_info));
+
+	if (write(server, &file, sizeof(struct file_info)) < 0) {
+		print_error(strerror(errno));
+	}
+	printf("file_info was sent, struct size %zu\n", sizeof(file));
 
 	filefd = open(argv[2], O_RDONLY);
 	if (filefd < 0) {

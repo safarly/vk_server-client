@@ -23,14 +23,20 @@
 # define BUFF_SIZE		4096
 # define MAX_EVENTS		128
 
+struct file_info
+{
+	char				name[NAME_MAX];
+	size_t				size;
+};
+
 struct client_data
 {
 	int					socket;
 	struct epoll_event	epev;
-	char				path_name[PATH_MAX];
-	struct stat			file_stat;
+	// struct stat			file_stat;
 
-	ssize_t	bytes_read;
+	struct file_info	file;
+	size_t	bytes_read;
 	ssize_t	count;
 
 	int		filefd;
