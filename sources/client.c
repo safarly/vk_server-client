@@ -15,11 +15,11 @@ int		main(int argc, char **argv) /* argv[1] - server addr, argv[2] - file to sen
 		return EXIT_FAILURE;
 	}
 
-	if (write(server, &file_stat, sizeof(struct stat)) < 0) {
-		close(server);
-		print_error(strerror(errno));
-		return EXIT_FAILURE;
-	}
+	// if (write(server, &file_stat, sizeof(struct stat)) < 0) {
+	// 	close(server);
+	// 	print_error(strerror(errno));
+	// 	return EXIT_FAILURE;
+	// }
 
 	filefd = open(argv[2], O_RDONLY);
 	if (filefd < 0) {
@@ -34,6 +34,11 @@ int		main(int argc, char **argv) /* argv[1] - server addr, argv[2] - file to sen
 		print_error(strerror(errno));
 		return EXIT_FAILURE;
 	}
+
+	shutdown(server, SHUT_RDWR);
+char check_buf[10];
+	int socket_check = read(server, check_buf, 1);
+	printf("%d - check read from socket\n", socket_check);
 
 	printf("File was %ssuccessfully%s sent\n", GREEN, RESET);
 	close(filefd);
@@ -64,15 +69,15 @@ int		send_file(int server, int file, char **argv)
 	char	*file_name;
 	size_t	namelen;
 
-	file_name = get_filename(argv[2]);
-	namelen = strlen(file_name);
-	if (write(server, &namelen, sizeof(namelen)) < 0) {
-		return -1;
-	}
+	// file_name = get_filename(argv[2]);
+	// namelen = strlen(file_name);
+	// if (write(server, &namelen, sizeof(namelen)) < 0) {
+	// 	return -1;
+	// }
 
-	if (write(server, file_name, namelen) < 0) {
-		return -1;
-	}
+	// if (write(server, file_name, namelen) < 0) {
+	// 	return -1;
+	// }
 
 	if (copy_data(file, server) < 0) {
 		return -1;

@@ -12,12 +12,18 @@ int		copy_data(int source, int dest)
 	{
 		bytes_read = read(source, buffer, sizeof(buffer));
 		if (bytes_read < 0) {
+			if (errno == EAGAIN) {
+				return 1;
+			}
+
 			print_error(strerror(errno));
 			return -1;
 		}
+
 		if (bytes_read == 0) {
 			break ;
 		}
+
 		bytes_written = 0;
 		while (bytes_written < bytes_read)
 		{

@@ -29,6 +29,11 @@ struct client_data
 	struct epoll_event	epev;
 	char				path_name[PATH_MAX];
 	struct stat			file_stat;
+
+	ssize_t	bytes_read;
+	ssize_t	count;
+
+	int		filefd;
 };
 
 
