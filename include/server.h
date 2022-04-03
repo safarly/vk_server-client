@@ -15,6 +15,14 @@
 # include <sys/types.h>
 # include <netdb.h>
 # include <sys/epoll.h>
+# include <sys/signalfd.h>
+# include <signal.h>
+
+    //    #include <sys/signalfd.h>
+    //    #include <signal.h>
+    //    #include <unistd.h>
+    //    #include <stdlib.h>
+    //    #include <stdio.h>
 
 # include "colors.h"
 # include "errors.h"

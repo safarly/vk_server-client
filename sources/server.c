@@ -10,6 +10,7 @@ int		main(int argc, char **argv) /* argv[1] - port, argv[2] - save dir */
 	int		server;
 	int		client;
 	int		epfd;
+	int		sigfd;
 
 	if (check_server_args(argc, argv) < 0) {
 		return EXIT_FAILURE;
@@ -36,9 +37,32 @@ int		main(int argc, char **argv) /* argv[1] - port, argv[2] - save dir */
 
 	epoll_ctl(epfd, EPOLL_CTL_ADD, server, &server_event); //check what is returned
 
+	struct epoll_event signal_event;
+
+	{
+		sigset_t	mask;
+		sigemptyset(&mask);
+		sigaddset(&mask, SIGINT);
+
+		if (sigprocmask(SIG_BLOCK, &mask, NULL) == -1) {
+			print_error(strerror(errno));
+		}
+
+		sigfd = signalfd(-1, &mask, SFD_NONBLOCK);
+		if (sigfd == -1) {
+			print_error(strerror(errno));
+		}
+
+		signal_event.data.fd = sigfd;
+		signal_event.events = EPOLLIN; // check edge trigger or level
+
+		epoll_ctl(epfd, EPOLL_CTL_ADD, sigfd, &signal_event);
+	}
+
 	int event_count = 0;
 	printf("Server has started and is listening on port %s\n", argv[1]);
-	while (true)
+	int terminate = 0;
+	while (!terminate)
 	{
 		event_count = epoll_wait(epfd, events, MAX_EVENTS, -1);
 
@@ -50,6 +74,9 @@ int		main(int argc, char **argv) /* argv[1] - port, argv[2] - save dir */
 					continue ;
 				}
 
+				// log(0, "blaak %f", 34);
+				// update printe_error with variadic args
+
 				else {
 					struct client_data *client_data = malloc(sizeof(struct client_data));
 					client_data->socket = client;
@@ -57,16 +84,23 @@ int		main(int argc, char **argv) /* argv[1] - port, argv[2] - save dir */
 					client_data->epev.events = EPOLLIN | EPOLLRDHUP | EPOLLHUP | EPOLLET;
 					client_data->bytes_read = 0;
 					client_data->count = 0;
-					client_data->filefd = open("/home/emurky/Desktop/sendto/test.txt", O_CREAT | O_TRUNC | O_RDWR);
-					if (client_data->filefd < 0) {
-						perror("open");
-					}
+
 				// memset(client_data->path_name, 0, sizeof(client_data->path_name));
 
 					set_socket_nonblock(client);
 					epoll_ctl(epfd, EPOLL_CTL_ADD, client, &client_data->epev);
 					printf("Client connected\n");
 				}
+			}
+
+			else if (events[i].data.fd == sigfd) {
+
+				printf("\nInterrupted!\n");
+				// free memory
+				// close fds
+				terminate = 1;
+				break ;
+
 			}
 
 			else {
@@ -101,8 +135,16 @@ int		main(int argc, char **argv) /* argv[1] - port, argv[2] - save dir */
 							return -1;
 						}
 						client_data->bytes_read += client_data->count;
+						if (client_data->bytes_read == sizeof(struct file_info)) {
+							client_data->filefd = open("/home/emurky/Desktop/sendto/test.txt", O_CREAT | O_TRUNC | O_RDWR);
+							if (client_data->filefd < 0) {
+								perror("open");
+							}
+							break ;
+						}
 					}
-					printf("file_info was read, struct size %zu\n", sizeof(client_data->file));
+
+					printf("file_info was read, struct size %zu and size is %zu\n", sizeof(client_data->file), client_data->file.size);
 
 					copy_data(client_data->socket, client_data->filefd);
 				}
@@ -150,6 +192,8 @@ int		main(int argc, char **argv) /* argv[1] - port, argv[2] - save dir */
 		// }
 	}
 
+
+	close(epfd);
 	close(server);
 	return 0;
 }
@@ -227,6 +271,31 @@ int		receive_file(struct client_data *client, char *save_dir)
 	// close(filefd);
 	return 1;
 }
+
+// int		handle_name(int client, const char *save_dir, char *path_name)
+// {
+// 	char	buf_name[NAME_MAX];
+// 	size_t	namelen = 0;
+
+// 	memset(buf_name, 0, sizeof(buf_name));
+// 	if (read(client, &namelen, sizeof(namelen)) < 0) {
+// 		return -1;
+// 	}
+// 	if (read(client, buf_name, namelen) < 0) {
+// 		return -1;
+// 	}
+// 	if (strchr(buf_name, '/')) {
+// 		return print_error(ERR_FILENAME);
+// 	}
+// 	strcpy(path_name, save_dir);
+// 	if (path_name[strlen(path_name) - 1] != '/') {
+// 		strcat(path_name, "/");
+// 	}
+// 	strcat(path_name, buf_name);
+// 	printf("file - \'%s\'\n", path_name);
+// 	return 1;
+// }
+
 
 // int		handle_name(struct client_data *client, const char *save_dir)
 // {

@@ -23,7 +23,7 @@ int		main(int argc, char **argv) /* argv[1] - server addr, argv[2] - file to sen
 	// }
 
 	memset(&file, 0, sizeof(struct file_info));
-
+	file.size = 21;
 	if (write(server, &file, sizeof(struct file_info)) < 0) {
 		print_error(strerror(errno));
 	}
