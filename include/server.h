@@ -24,6 +24,7 @@
 # define BACKLOG_LIMIT	128
 # define BUFF_SIZE		4096
 # define MAX_EVENTS		128
+# define DEFAULT_MODE	0644
 
 # define print_error(err)	_print_error(err, __LINE__, __FILE__)
 

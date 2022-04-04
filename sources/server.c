@@ -63,17 +63,17 @@ int		set_epoll_and_events(int server, int *sigfd)
 
 client_data	*client_data_init(int client)
 {
-	client_data	*client_data = malloc(sizeof(client_data));
-	if (client_data == NULL) {
+	client_data	*data = malloc(sizeof(client_data));
+	if (data == NULL) {
 		return NULL;
 	}
 
-	client_data->socket = client;
-	client_data->epev.data.ptr = client_data;
-	client_data->epev.events = EPOLLIN | EPOLLRDHUP | EPOLLHUP | EPOLLET;
-	client_data->bytes_read = 0;
-	client_data->count = 0;
-	return client_data;
+	data->socket = client;
+	data->epev.data.ptr = data;
+	data->epev.events = EPOLLIN | EPOLLRDHUP | EPOLLHUP | EPOLLET;
+	data->bytes_read = 0;
+	data->count = 0;
+	return data;
 }
 
 int		accept_new_client(int epfd, int server)
@@ -104,6 +104,78 @@ int		accept_new_client(int epfd, int server)
 	return 1;
 }
 
+// int		handle_client_events(int epfd, struct epoll_event event)
+// {
+// 	client_data *client_data = event.data.ptr;
+
+// 	if (event.events & EPOLLIN) {	// read from client sock
+// 		printf("Read data from client\n");
+// 		// ssize_t	count = 0, bytes_read = 0, bytes_written = 0;
+// 		// int file = open("~/Desktop/sendto/test.txt", O_CREAT | O_TRUNC | O_RDWR);
+// 	// int count could be mad on stack
+// 		while (client_data->bytes_read < sizeof(file_info))
+// 		{
+// 			client_data->count = read(client_data->socket,
+// 				((char *)&client_data->file_info) + client_data->bytes_read,
+// 				sizeof(file_info) - client_data->bytes_read);
+// 			if (client_data->count < 0) {
+// 				if (errno != EAGAIN) {
+// 					print_error(strerror(errno));
+// 					// destroy client
+// 					// close connection]]
+// 					// this is an error, return -1
+// 				}
+
+// 				else {
+// 					return 1;
+// 				}
+// 			}
+// 			if (client_data->count == 0) {
+// 				// destroy client
+// 				// close connection
+// 				// this is an error, return -1
+// 				return -1;
+// 			}
+// 			client_data->bytes_read += client_data->count;
+// 			if (client_data->bytes_read == sizeof(file_info)) {
+// 				// client_data->bytes_read = 0;
+// 				// client_data->count = 0;
+
+// 				client_data->filefd = open("/home/emurky/Desktop/sendto/test.txt", O_CREAT | O_TRUNC | O_RDWR);
+// 				// if (client_data->filefd < 0) {
+// 				// 	perror("open");
+// 				// }
+
+// 				return 1;
+// 			}
+// 		}
+
+// 		printf("file_info was read, struct size %zu and size is %zu\n", sizeof(client_data->file_info), client_data->file_info.file_stat.st_size);
+
+// 		if (client_data->filefd < 0) {
+// 			print_error(strerror(errno));
+// 			close(client_data->socket);
+// 			epoll_ctl(epfd, EPOLL_CTL_DEL, client_data->socket, &client_data->epev);
+// 			free(client_data);
+// 			// continue ;
+// 			return 0;
+// 		}
+
+// 		copy_data(client_data->socket, client_data->filefd);
+// 	}
+
+// 	if (event.events & (EPOLLHUP | EPOLLRDHUP)) { // close client socket and free struct cl_ev
+// 		printf("Client closed\n");
+// 		// client_data *client_to_close = events[i].data.ptr;
+// 		close(client_data->socket);
+// 		close(client_data->filefd);
+// 		free(client_data);
+// 		epoll_ctl(epfd, EPOLL_CTL_DEL, client_data->socket, &client_data->epev);
+// 	}
+// 	return 2;
+// }
+
+
 int		main(int argc, char **argv) /* argv[1] - port, argv[2] - save dir */
 {
 	int		server;
@@ -111,6 +183,7 @@ int		main(int argc, char **argv) /* argv[1] - port, argv[2] - save dir */
 	int		epfd;
 	int		sigfd;
 	int		event_count = 0;
+	int		event_status;
 	struct epoll_event	events[MAX_EVENTS];
 
 	if (check_server_args(argc, argv) < 0) {
@@ -190,7 +263,7 @@ int		main(int argc, char **argv) /* argv[1] - port, argv[2] - save dir */
 							// client_data->bytes_read = 0;
 							// client_data->count = 0;
 
-							client_data->filefd = open("/home/emurky/Desktop/sendto/test.txt", O_CREAT | O_TRUNC | O_RDWR);
+							client_data->filefd = open("/home/emurky/Desktop/sendto/test.txt", O_CREAT | O_TRUNC | O_WRONLY, DEFAULT_MODE);
 							if (client_data->filefd < 0) {
 								perror("FATAL");
 							}
@@ -198,52 +271,89 @@ int		main(int argc, char **argv) /* argv[1] - port, argv[2] - save dir */
 						}
 					}
 
+					if (client_data->filefd < 0) {
+						print_error(strerror(errno));
+						close(client_data->socket);
+						epoll_ctl(epfd, EPOLL_CTL_DEL, client_data->socket, &client_data->epev);
+						free(client_data);
+						continue ;
+					}
+
 					printf("file_info was read, struct size %zu and size is %zu\n", sizeof(client_data->file), client_data->file.file_stat.st_size);
 
 					copy_data(client_data->socket, client_data->filefd);
-				}
+				// event_status = handle_client_events(epfd, events[i]);
+				// if (event_status < 0) {
+				// 	return -1;
+				// }
 
-				if (events[i].events & (EPOLLHUP | EPOLLRDHUP)) { // close client socket and free struct cl_ev
-					printf("Client closed\n");
-					// client_data *client_to_close = events[i].data.ptr;
-					close(client_data->socket);
-					close(client_data->filefd);
-					free(client_data);
-					epoll_ctl(epfd, EPOLL_CTL_DEL, client_data->socket, &client_data->epev);
-				}
+				// else if (event_status == 1) {
+				// 	break ;
+				// }
 
-
-				// if (receive_file(client, argv[2]) < 0) {
-				// 	print_error(strerror(errno));
-				// 	close(client);
-				// 	printf("\nStill listening on port %s\n", argv[1]);
+				// else if (event_status == 0) {
 				// 	continue ;
 				// }
 
-				// close(client);
+				// client_data *client_data = events[i].data.ptr;
+
+				// if (events[i].events & EPOLLIN) {	// read from client sock
+				// 	printf("Read data from client\n");
+				// 	// ssize_t	count = 0, bytes_read = 0, bytes_written = 0;
+				// 	// int file = open("~/Desktop/sendto/test.txt", O_CREAT | O_TRUNC | O_RDWR);
+				// // int count could be mad on stack
+				// 	while (client_data->bytes_read < sizeof(file_info))
+				// 	{
+				// 		client_data->count = read(client_data->socket,
+				// 			((char *)&client_data->file_info) + client_data->bytes_read,
+				// 			sizeof(file_info) - client_data->bytes_read);
+				// 		if (client_data->count < 0) {
+				// 			if (errno != EAGAIN) {
+				// 				print_error(strerror(errno));
+				// 				// destroy client
+				// 				// close connection]]
+				// 				// this is an error, return -1
+				// 			}
+
+				// 			else {
+				// 				break ;
+				// 			}
+				// 		}
+				// 		if (client_data->count == 0) {
+				// 			// destroy client
+				// 			// close connection
+				// 			// this is an error, return -1
+				// 			return -1;
+				// 		}
+				// 		client_data->bytes_read += client_data->count;
+				// 		if (client_data->bytes_read == sizeof(file_info)) {
+				// 			// client_data->bytes_read = 0;
+				// 			// client_data->count = 0;
+
+				// 			client_data->filefd = open("/home/emurky/Desktop/sendto/test.txt", O_CREAT | O_TRUNC | O_RDWR);
+				// 			// if (client_data->filefd < 0) {
+				// 			// 	perror("open");
+				// 			// }
+
+				// 			break ;
+				// 		}
+				// 	}
+
+				// 	printf("file_info was read, struct size %zu and size is %zu\n", sizeof(client_data->file_info), client_data->file_info.file_stat.st_size);
+
+				// 	copy_data(client_data->socket, client_data->filefd);
+				// }
+
+				// if (events[i].events & (EPOLLHUP | EPOLLRDHUP)) { // close client socket and free struct cl_ev
+				// 	printf("Client closed\n");
+				// 	// client_data *client_to_close = events[i].data.ptr;
+				// 	close(client_data->socket);
+				// 	close(client_data->filefd);
+				// 	free(client_data);
+				// 	epoll_ctl(epfd, EPOLL_CTL_DEL, client_data->socket, &client_data->epev);
+				}
 			}
-		// epoll_ctl(epfd, )
-	}
-
-		// if (client < 0) {
-		// 	print_error(strerror(errno));
-		// 	continue ;
-		// }
-// dont forget to free
-		// if (client > 0) {
-			// printf("Client connected\n");
-			// if (receive_file(client, argv[2]) < 0) {
-			// 	print_error(strerror(errno));
-			// 	// status = 1;
-			// 	// write(client, &status, 1);
-			// 	close(client);
-			// 	printf("\nStill listening on port %s\n", argv[1]);
-			// 	continue ;
-			// }
-
-			// close(client);
-			// printf("\nStill listening on port %s\n", argv[1]);
-		// }
+		}
 	}
 
 
