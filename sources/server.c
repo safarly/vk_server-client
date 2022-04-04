@@ -192,7 +192,7 @@ int		main(int argc, char **argv) /* argv[1] - port, argv[2] - save dir */
 
 							client_data->filefd = open("/home/emurky/Desktop/sendto/test.txt", O_CREAT | O_TRUNC | O_RDWR);
 							if (client_data->filefd < 0) {
-								perror("open");
+								perror("FATAL");
 							}
 							break ;
 						}

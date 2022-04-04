@@ -25,6 +25,8 @@
 # define BUFF_SIZE		4096
 # define MAX_EVENTS		128
 
+# define print_error(err)	_print_error(err, __LINE__, __FILE__)
+
 typedef	struct	file_info
 {
 	// char				name[NAME_MAX];
@@ -66,7 +68,7 @@ char	*get_port(char *host);
 
 //		utils.c
 int		copy_data(int source, int dest);
-int		print_error(const char *err);
+int		_print_error(const char *err, int line, const char *file);
 int		arg_is_numerical(const char *arg);
 
 #endif
