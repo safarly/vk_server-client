@@ -42,8 +42,11 @@ typedef					struct client_data
 	struct epoll_event	epev;
 
 	struct file_info	file;
+	bool				file_info_read;
+	bool				name_read;
 	size_t				bytes_read;
 	size_t				name_bytes_read;
+	char				name[NAME_MAX];
 }						client_data;
 
 

@@ -72,8 +72,11 @@ client_data	*client_init(int socket, int epfd)
 	client->epfd = epfd;
 	client->epev.data.ptr = client;
 	client->epev.events = EPOLLIN | EPOLLRDHUP | EPOLLHUP | EPOLLET;
+	client->file_info_read = false;
+	client->name_read = false;
 	client->bytes_read = 0;
 	client->name_bytes_read = 0;
+	memset(client->name, 0, sizeof(client->name));
 
 	return client;
 }
@@ -201,13 +204,18 @@ int		main(int argc, char **argv) /* argv[1] - port, argv[2] - save dir */
 
 						client->bytes_read += count;
 						if (client->bytes_read == sizeof(file_info)) {
-							handle_name(client, argv[2], save_name);
-							client->file.fd = open(save_name, O_CREAT | O_EXCL | O_WRONLY, DEFAULT_MODE);
-							if (client->file.fd < 0) {
-								perror("FATAL");
-							}
+							client->file_info_read = true;
+							client->file.fd = 0;
 
 							break ;
+						}
+					}
+
+					if (client->file_info_read == true) {
+						handle_name(client, argv[2], save_name);
+						if (client->name_read == true && client->file.fd == 0) {
+							client->file.fd = open(save_name, O_CREAT | O_EXCL | O_WRONLY, DEFAULT_MODE);
+							memset(save_name, 0, sizeof(save_name));
 						}
 					}
 
@@ -232,6 +240,7 @@ int		main(int argc, char **argv) /* argv[1] - port, argv[2] - save dir */
 
 	close(epfd);
 	close(server);
+
 	return 0;
 }
 
@@ -268,15 +277,16 @@ int		check_server_args(int argc, char **argv)
 int		handle_name(client_data *client, const char *save_dir, char *save_name)
 {
 	ssize_t	count;
-	size_t	bytes_read = client->name_bytes_read;
-	ushort	namelen = client->file.namelen;
-	char	buf_name[NAME_MAX];
+	// size_t	bytes_read = client->name_bytes_read;
+	// ushort	namelen = client->file.namelen;
+	// char	buf_name[NAME_MAX];
 
-	memset(buf_name, 0, sizeof(buf_name));
+	// memset(buf_name, 0, sizeof(buf_name));
 
-	while (bytes_read < namelen)
+	while (client->name_bytes_read < client->file.namelen)
 	{
-		count = read(client->socket, buf_name + bytes_read, namelen - bytes_read);
+		count = read(client->socket, client->name + client->name_bytes_read,
+					 client->file.namelen - client->name_bytes_read);
 		if (count < 0) {
 			if (errno != EAGAIN) {
 				print_error(strerror(errno));
@@ -295,14 +305,16 @@ int		handle_name(client_data *client, const char *save_dir, char *save_name)
 			return -1;
 		}
 
-		bytes_read += count;
-		if (bytes_read == client->file.namelen) {
+		client->name_bytes_read += count;
+		if (client->name_bytes_read == client->file.namelen) {
 			strcpy(save_name, save_dir);
 			if (save_name[strlen(save_name) - 1] != '/') {
 				strcat(save_name, "/");
 			}
-			strcat(save_name, buf_name);
+
+			strcat(save_name, client->name);
 			printf("file - \'%s\'\n", save_name);
+			client->name_read = true;
 		}
 
 		return 1;
@@ -314,7 +326,8 @@ int		handle_name(client_data *client, const char *save_dir, char *save_name)
 		strcat(save_name, "/");
 	}
 
-	strcat(save_name, buf_name);
+	strcat(save_name, client->name);
 	printf("file - \'%s\'\n", save_name);
+
 	return 1;
 }
