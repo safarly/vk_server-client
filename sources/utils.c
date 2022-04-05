@@ -32,9 +32,11 @@ int		copy_data(int source, int dest)
 				print_error(strerror(errno));
 				return -1;
 			}
+
 			bytes_written += count;
 		}
 	}
+
 	return 1;
 }
 
@@ -52,7 +54,9 @@ int		arg_is_numerical(const char *arg)
 		if (!isdigit(*arg)) {
 			return 0;
 		}
+
 		arg++;
 	}
+
 	return 1;
 }

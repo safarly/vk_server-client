@@ -28,26 +28,23 @@
 
 # define print_error(err)	_print_error(err, __LINE__, __FILE__)
 
-typedef	struct	file_info
+typedef			struct file_info
 {
-	// char				name[NAME_MAX];
-	size_t				namelen;
-	// size_t				size;
-	struct stat			file_stat;
+	int			fd;
+	ushort		namelen;
+	size_t		size;
 }				file_info;
 
-typedef	struct	client_data
+typedef					struct client_data
 {
 	int					socket;
+	int					epfd;
 	struct epoll_event	epev;
-	// struct stat			file_stat;
 
 	struct file_info	file;
-	size_t	bytes_read;
-	ssize_t	count;
-
-	int		filefd;
-}				client_data;
+	size_t				bytes_read;
+	size_t				name_bytes_read;
+}						client_data;
 
 
 int		set_socket_nonblock(int socket);
@@ -55,12 +52,12 @@ int		set_socket_nonblock(int socket);
 //		server.c
 int		check_server_args(int argc, char **argv);
 int		receive_file(struct client_data *client, char *save_dir);
-int		handle_name(int client, const char *save_dir, char *path_name);
+int		handle_name(client_data *client, const char *save_dir, char *save_name);
 
 //		client.c
-int		check_client_args(int argc, char **argv, struct stat *file_stat);
-int		send_file(int server, int file, char **argv);
-char	*get_filename(char *path);
+int		check_client_args(int argc, char **argv, file_info *file);
+int		send_file(int server, file_info *file, char *file_path);
+char	*get_file_name(char *path);
 
 //		sockets.c
 int		create_client_socket(char *host);
