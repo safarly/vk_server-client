@@ -25,6 +25,8 @@
 # define BUFF_SIZE		4096
 # define MAX_EVENTS		128
 # define DEFAULT_MODE	0644
+# define CONTINUE		1
+# define BREAK			2
 
 # define print_error(err)	_print_error(err, __LINE__, __FILE__)
 

@@ -68,6 +68,7 @@ client_data	*client_init(int socket, int epfd)
 		return NULL;
 	}
 
+	memset(client, 0, sizeof(client_data));
 	client->socket = socket;
 	client->epfd = epfd;
 	client->epev.data.ptr = client;
@@ -116,36 +117,83 @@ int		accept_new_client(int epfd, int server)
 	return 1;
 }
 
-int		main(int argc, char **argv) /* argv[1] - port, argv[2] - save dir */
+int		get_file_info(client_data *client)
 {
-	int		server;
-	int		epfd;
-	int		sigfd;
 	int		count;
+
+	while (client->bytes_read < sizeof(file_info))
+	{
+		count = read(client->socket,
+			((char *)&client->file) + client->bytes_read,
+			sizeof(file_info) - client->bytes_read);
+		if (count < 0) {
+			if (errno != EAGAIN) {
+				print_error(strerror(errno));
+				client_destroy(client);
+				return -1;
+			}
+
+			else {
+				break ;
+			}
+		}
+
+		if (count == 0) {
+			print_error(strerror(errno));
+			client_destroy(client);
+			return -1;
+		}
+
+		client->bytes_read += count;
+		if (client->bytes_read == sizeof(file_info)) {
+			client->file_info_read = true;
+			client->file.fd = 0;
+			break ;
+		}
+	}
+
+	return 1;
+}
+
+int		receive_data_from_client(client_data *client, const char *save_dir)
+{
+	char	save_name[PATH_MAX];
+
+	memset(save_name, 0, sizeof(save_name));
+
+	if (get_file_info(client) < 0) {
+		return -1;
+	}
+
+	if (client->file_info_read == true) {
+		handle_name(client, save_dir, save_name);
+		if (client->name_read == true && client->file.fd == 0) {
+			client->file.fd = open(save_name, O_CREAT | O_EXCL | O_WRONLY, DEFAULT_MODE);
+			memset(save_name, 0, sizeof(save_name));
+		}
+	}
+
+	if (client->file.fd < 0) {
+		print_error(strerror(errno));
+		client_destroy(client);
+		return CONTINUE;
+	}
+
+	printf("file_info was read, struct size %zu and size is %zu\n", sizeof(client->file), client->file.size);
+
+	copy_data(client->socket, client->file.fd);
+
+	return 1;
+}
+
+int		run_server(int epfd, int sigfd, int server, const char *save_dir)
+{
 	int		event_count;
+	int		event_status;
+	int		terminate = 0;
 	client_data 		*client;
 	struct epoll_event	events[MAX_EVENTS];
 
-	char	save_name[PATH_MAX];
-	memset(save_name, 0, sizeof(save_name));
-
-	if (check_server_args(argc, argv) < 0) {
-		return EXIT_FAILURE;
-	}
-
-	server = create_server_socket(argv[1]);
-	if (server < 0) {
-		return EXIT_FAILURE;
-	}
-
-	epfd = set_epoll_and_events(server, &sigfd);
-	if (epfd < 0) {
-		print_error(strerror(errno));
-		return EXIT_FAILURE;
-	}
-
-	printf("Server has started and is listening on port %s\n", argv[1]);
-	int terminate = 0;
 	while (!terminate)
 	{
 		event_count = epoll_wait(epfd, events, MAX_EVENTS, -1);
@@ -175,59 +223,15 @@ int		main(int argc, char **argv) /* argv[1] - port, argv[2] - save dir */
 
 				if (events[i].events & EPOLLIN) {
 					printf("Read data from client\n");
-				// int count could be mad on stack
-					while (client->bytes_read < sizeof(file_info))
-					{
-						count = read(client->socket,
-							((char *)&client->file) + client->bytes_read,
-							sizeof(file_info) - client->bytes_read);
-						if (count < 0) {
-							if (errno != EAGAIN) {
-								print_error(strerror(errno));
-								client_destroy(client);
-								// close connection]]
-								// this is an error, return -1
-							}
 
-							else {
-								break ;
-							}
-						}
-
-						if (count == 0) {
-							print_error(strerror(errno));
-							client_destroy(client);
-							// close connection
-							// this is an error, return -1
-							return -1;
-						}
-
-						client->bytes_read += count;
-						if (client->bytes_read == sizeof(file_info)) {
-							client->file_info_read = true;
-							client->file.fd = 0;
-
-							break ;
-						}
+					event_status = receive_data_from_client(client, save_dir);
+					if (event_status < 0) {
+						return -1;
 					}
 
-					if (client->file_info_read == true) {
-						handle_name(client, argv[2], save_name);
-						if (client->name_read == true && client->file.fd == 0) {
-							client->file.fd = open(save_name, O_CREAT | O_EXCL | O_WRONLY, DEFAULT_MODE);
-							memset(save_name, 0, sizeof(save_name));
-						}
-					}
-
-					if (client->file.fd < 0) {
-						print_error(strerror(errno));
-						client_destroy(client);
+					else if(event_status == CONTINUE) {
 						continue ;
 					}
-
-					printf("file_info was read, struct size %zu and size is %zu\n", sizeof(client->file), client->file.size);
-
-					copy_data(client->socket, client->file.fd);
 				}
 
 				if (events[i].events & (EPOLLHUP | EPOLLRDHUP)) { // close client socket and free struct cl_ev
@@ -236,6 +240,35 @@ int		main(int argc, char **argv) /* argv[1] - port, argv[2] - save dir */
 				}
 			}
 		}
+	}
+
+	return 1;
+}
+
+int		main(int argc, char **argv) /* argv[1] - port, argv[2] - save dir */
+{
+	int		server;
+	int		epfd;
+	int		sigfd;
+
+	if (check_server_args(argc, argv) < 0) {
+		return EXIT_FAILURE;
+	}
+
+	server = create_server_socket(argv[1]);
+	if (server < 0) {
+		return EXIT_FAILURE;
+	}
+
+	epfd = set_epoll_and_events(server, &sigfd);
+	if (epfd < 0) {
+		print_error(strerror(errno));
+		return EXIT_FAILURE;
+	}
+
+	printf("Server has started and is listening on port %s\n", argv[1]);
+	if (run_server(epfd, sigfd, server, argv[2]) < 0) {
+		return EXIT_FAILURE;
 	}
 
 	close(epfd);
@@ -277,11 +310,6 @@ int		check_server_args(int argc, char **argv)
 int		handle_name(client_data *client, const char *save_dir, char *save_name)
 {
 	ssize_t	count;
-	// size_t	bytes_read = client->name_bytes_read;
-	// ushort	namelen = client->file.namelen;
-	// char	buf_name[NAME_MAX];
-
-	// memset(buf_name, 0, sizeof(buf_name));
 
 	while (client->name_bytes_read < client->file.namelen)
 	{
