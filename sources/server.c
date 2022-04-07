@@ -86,7 +86,10 @@ int		client_destroy(client_data *client)
 {
 	epoll_ctl(client->epfd, EPOLL_CTL_DEL, client->socket, &client->epev);
 	close(client->socket);
-	close(client->file.fd);
+	if (client->file.fd != -1) {
+		close(client->file.fd);
+	}
+
 	free(client);
 	client = NULL;
 
