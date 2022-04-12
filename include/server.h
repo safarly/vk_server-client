@@ -52,12 +52,22 @@ typedef					struct client_data
 	char				name[NAME_MAX + 1];
 }						client_data;
 
-
-int		set_socket_nonblock(int socket);
-
 //		server.c
 int		check_server_args(int argc, char **argv);
-int		receive_file(struct client_data *client, char *save_dir);
+void	run_server(int epfd, int sigfd, int server, const char *save_dir);
+int		event_receive(client_data *client, const char *save_dir);
+
+//		epoll.c
+int		set_epoll_and_events(int server, int *sigfd);
+int		set_server_event(int epfd, int server);
+int		set_signal_event(int epfd, int *sigfd);
+int		accept_new_client(int epfd, int server);
+client_data	*client_init(int socket, int epfd);
+int		client_destroy(client_data *client);
+
+//		receive_file.c
+int		receive_data_from_client(client_data *client, const char *save_dir);
+int		get_file_info(client_data *client);
 int		handle_name(client_data *client, const char *save_dir, char *save_name);
 
 //		client.c
@@ -66,6 +76,7 @@ int		send_file(int server, file_info *file, char *file_path);
 char	*get_file_name(char *path);
 
 //		sockets.c
+int		set_socket_nonblock(int socket);
 int		create_client_socket(char *host);
 int		create_server_socket(char *port);
 char	*get_port(char *host);
@@ -73,6 +84,8 @@ char	*get_port(char *host);
 //		utils.c
 int		copy_data(int source, int dest);
 int		_print_error(const char *err, int line, const char *file);
+int		isvalid_char(char c);
+int		check_file_name(client_data *client);
 int		arg_is_numerical(const char *arg);
 
 #endif

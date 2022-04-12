@@ -11,6 +11,8 @@ SERVER				= server
 S_SRCS				= $(addprefix $(SRCSDIR)/, \
 						server.c \
 						sockets.c \
+						epoll.c \
+						receive_file.c \
 						utils.c )
 S_OBJS				= $(S_SRCS:.c=.o)
 S_DEPS				= $(S_SRCS:.c=.d)

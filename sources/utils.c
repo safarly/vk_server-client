@@ -44,6 +44,27 @@ int		_print_error(const char *err, int line, const char *file)
 	return -1;
 }
 
+int		isvalid_char(char c)
+{
+	return (isalpha(c) || isdigit(c) || c == '.' || c == '-' || c == '_');
+}
+
+int		check_file_name(client_data *client)
+{
+	char	*name = client->name;
+
+	while (*name)
+	{
+		if (!isvalid_char(*name)) {
+			return -1;
+		}
+
+		name++;
+	}
+
+	return 1;
+}
+
 int		arg_is_numerical(const char *arg)
 {
 	while (*arg)
