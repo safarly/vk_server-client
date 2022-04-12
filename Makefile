@@ -28,6 +28,7 @@ C_DEPS				= $(C_SRCS:.c=.d)
 CC 					= clang
 RM 					= rm -f
 CFLAGS				= -Wall -Wextra --pedantic -g3 -O0 #-fsanitize=address
+CFLAGS				+= -Werror
 CPPFLAGS			= -MMD -I$(INCSDIR)
 
 all:				server client

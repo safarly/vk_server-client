@@ -16,8 +16,6 @@ int		main(int argc, char **argv) /* argv[1] - server addr, argv[2] - file to sen
 		return EXIT_FAILURE;
 	}
 
-	printf("file_info was sent, struct size %zu\n", sizeof(file));
-
 	file.fd = open(argv[2], O_RDONLY);
 	if (file.fd < 0) {
 		close(server);
@@ -73,11 +71,19 @@ int		send_file(int server, file_info *file, char *file_path)
 	file_name = get_file_name(file_path);
 	file->namelen = strlen(file_name);
 
-	if (write(server, file, sizeof(file_info)) < 0) {
+	if (write(server, file, sizeof(file_info) - 7) < 0) {
+		return -1;
+	}
+	sleep(1);
+	if (write(server, (char *)file + 7, 7) < 0) {
 		return -1;
 	}
 
-	if (write(server, file_name, file->namelen) < 0) {
+	if (write(server, file_name, 3) < 0) {
+		return -1;
+	}
+	sleep(1);
+	if (write(server, file_name + 3, file->namelen - 3) < 0) {
 		return -1;
 	}
 

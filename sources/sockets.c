@@ -44,7 +44,8 @@ int		create_server_socket(char *port)
 	}
 
 	freeaddrinfo(addresses);
-	print_error(ERR_BIND);
+	print_error(strerror(errno));
+
 	return -1;
 }
 
@@ -80,17 +81,17 @@ int		create_client_socket(char *host)
 		}
 
 		if (connect(sock, ap->ai_addr, ap->ai_addrlen) != -1) {
+			printf("Client has connected to server\n");
 			freeaddrinfo(addresses);
 			return sock;
 		}
-		// print_error(strerror(errno));
 		close(sock);
 	}
 
 	freeaddrinfo(addresses);
-	print_error(ERR_CONNECT);
+	print_error(strerror(errno));
+
 	return -1;
-	// printf("address - %s, port - %s %d\n", hostaddr, port, hints.ai_family);
 }
 
 char	*get_port(char *host)
@@ -103,5 +104,6 @@ char	*get_port(char *host)
 
 	*port = '\0';
 	port++;
+
 	return port;
 }

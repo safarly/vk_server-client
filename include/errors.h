@@ -7,10 +7,8 @@
 # define ERR_SOCK_LIM	"Socket limit has been exceeded (limit is 65535)"
 # define ERR_DIR		"Invalid directory"
 # define ERR_FILE		"Invalid file (is not a regular file)"
-# define ERR_FILENAME	"Invalid char in a file name"
-# define ERR_CONNECT	"Could not connect to a server"
 # define ERR_PORT		"Invalid port"
-# define ERR_BIND		"Could not bind"
+# define ERR_NAME		"Invalid characters in filename. Characters must be alphanumerical or '.', '-' and '_'"
 # define ERR			"Something went wrong"
 
 #endif

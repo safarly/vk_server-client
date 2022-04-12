@@ -132,7 +132,6 @@ int		get_file_info(client_data *client)
 		if (count < 0) {
 			if (errno != EAGAIN) {
 				print_error(strerror(errno));
-				client_destroy(client);
 				return -1;
 			}
 
@@ -143,7 +142,6 @@ int		get_file_info(client_data *client)
 
 		if (count == 0) {
 			print_error(strerror(errno));
-			client_destroy(client);
 			return -1;
 		}
 
@@ -169,7 +167,10 @@ int		receive_data_from_client(client_data *client, const char *save_dir)
 	}
 
 	if (client->file_info_read == true) {
-		handle_name(client, save_dir, save_name);
+		if (handle_name(client, save_dir, save_name) < 0) {
+			return -1;
+		}
+
 		if (client->name_read == true && client->file.fd == 0) {
 			client->file.fd = open(save_name, O_CREAT | O_EXCL | O_WRONLY, DEFAULT_MODE);
 			memset(save_name, 0, sizeof(save_name));
@@ -178,13 +179,15 @@ int		receive_data_from_client(client_data *client, const char *save_dir)
 
 	if (client->file.fd < 0) {
 		print_error(strerror(errno));
-		client_destroy(client);
-		return CONTINUE;
+		return -1;
 	}
 
 	printf("file_info was read, struct size %zu and size is %zu\n", sizeof(client->file), client->file.size);
 
-	copy_data(client->socket, client->file.fd);
+	if (copy_data(client->socket, client->file.fd) < 0) {
+		print_error(strerror(errno));
+		return -1;
+	}
 
 	return 1;
 }
@@ -229,10 +232,7 @@ int		run_server(int epfd, int sigfd, int server, const char *save_dir)
 
 					event_status = receive_data_from_client(client, save_dir);
 					if (event_status < 0) {
-						return -1;
-					}
-
-					else if(event_status == CONTINUE) {
+						client_destroy(client);
 						continue ;
 					}
 				}
@@ -310,6 +310,27 @@ int		check_server_args(int argc, char **argv)
 	return 1;
 }
 
+int		isvalid_char(char c)
+{
+	return (isalpha(c) || isdigit(c) || c == '.' || c == '-' || c == '_');
+}
+
+int		check_file_name(client_data *client)
+{
+	char	*name = client->name;
+
+	while (*name)
+	{
+		if (!isvalid_char(*name)) {
+			return -1;
+		}
+
+		name++;
+	}
+
+	return 1;
+}
+
 int		handle_name(client_data *client, const char *save_dir, char *save_name)
 {
 	ssize_t	count;
@@ -321,7 +342,6 @@ int		handle_name(client_data *client, const char *save_dir, char *save_name)
 		if (count < 0) {
 			if (errno != EAGAIN) {
 				print_error(strerror(errno));
-				client_destroy(client);
 				return -1;
 			}
 
@@ -332,12 +352,16 @@ int		handle_name(client_data *client, const char *save_dir, char *save_name)
 
 		if (count == 0) {
 			print_error(strerror(errno));
-			client_destroy(client);
 			return -1;
 		}
 
 		client->name_bytes_read += count;
 		if (client->name_bytes_read == client->file.namelen) {
+			if (check_file_name(client) < 0) {
+				print_error(ERR_NAME);
+				return -1;
+			}
+
 			strcpy(save_name, save_dir);
 			if (save_name[strlen(save_name) - 1] != '/') {
 				strcat(save_name, "/");

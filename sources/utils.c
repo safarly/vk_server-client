@@ -16,7 +16,6 @@ int		copy_data(int source, int dest)
 				return 1;
 			}
 
-			print_error(strerror(errno));
 			return -1;
 		}
 
@@ -29,7 +28,6 @@ int		copy_data(int source, int dest)
 		{
 			count = write(dest, buffer + bytes_written, bytes_read - bytes_written);
 			if (count < 0) {
-				print_error(strerror(errno));
 				return -1;
 			}
 
@@ -44,7 +42,6 @@ int		_print_error(const char *err, int line, const char *file)
 {
 	fprintf(stderr, "%s%sError:%s %s on line %d in file %s\n", BOLD, RED, RESET, err, line, file);
 	return -1;
-	// exit(EXIT_FAILURE);
 }
 
 int		arg_is_numerical(const char *arg)

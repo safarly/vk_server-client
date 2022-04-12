@@ -17,6 +17,7 @@
 # include <sys/epoll.h>
 # include <sys/signalfd.h>
 # include <signal.h>
+# include <linux/limits.h>
 
 # include "colors.h"
 # include "errors.h"
@@ -48,7 +49,7 @@ typedef					struct client_data
 	bool				name_read;
 	size_t				bytes_read;
 	size_t				name_bytes_read;
-	char				name[NAME_MAX];
+	char				name[NAME_MAX + 1];
 }						client_data;
 
 
