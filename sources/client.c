@@ -71,19 +71,11 @@ int		send_file(int server, file_info *file, char *file_path)
 	file_name = get_file_name(file_path);
 	file->namelen = strlen(file_name);
 
-	if (write(server, file, sizeof(file_info) - 7) < 0) {
-		return -1;
-	}
-	sleep(1);
-	if (write(server, (char *)file + 7, 7) < 0) {
+	if (write(server, file, sizeof(file_info)) < 0) {
 		return -1;
 	}
 
-	if (write(server, file_name, 3) < 0) {
-		return -1;
-	}
-	sleep(1);
-	if (write(server, file_name + 3, file->namelen - 3) < 0) {
+	if (write(server, file_name, file->namelen) < 0) {
 		return -1;
 	}
 
