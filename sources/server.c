@@ -63,7 +63,7 @@ int		check_server_args(int argc, char **argv)
 void	run_server(int epfd, int sigfd, int server, const char *save_dir)
 {
 	int		event_count;
-	int		terminate = 0;
+	bool	terminate = false;
 	struct epoll_event	events[MAX_EVENTS];
 
 	while (!terminate)
@@ -86,12 +86,12 @@ void	run_server(int epfd, int sigfd, int server, const char *save_dir)
 				printf("\nInterrupted!\n");
 				// free memory
 				// close fds
-				terminate = 1;
+				terminate = true;
 				break ;
 			}
 
 			else {
-				if (event_receive(events[i].data.ptr, save_dir) < 0) {
+				if (process_client_event(events[i].data.ptr, save_dir, events[i].events) < 0) {
 					continue ;
 				}
 			}
@@ -99,9 +99,9 @@ void	run_server(int epfd, int sigfd, int server, const char *save_dir)
 	}
 }
 
-int		event_receive(client_data *client, const char *save_dir)
+int		process_client_event(client_data *client, const char *save_dir, uint32_t events)
 {
-	if (client->epev.events & EPOLLIN) {
+	if (events & EPOLLIN) {
 		printf("Read data from client\n");
 		if (receive_data_from_client(client, save_dir) < 0) {
 			client_destroy(client);
@@ -109,7 +109,7 @@ int		event_receive(client_data *client, const char *save_dir)
 		}
 	}
 
-	if (client->epev.events & (EPOLLHUP | EPOLLRDHUP)) { // close client socket and free struct cl_ev
+	if (events & (EPOLLHUP | EPOLLRDHUP)) { // close client socket and free struct cl_ev
 		client_destroy(client);
 		printf("Client closed\n");
 	}

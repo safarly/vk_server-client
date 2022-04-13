@@ -79,7 +79,7 @@ int		accept_new_client(int epfd, int server)
 		}
 
 		epoll_ctl(epfd, EPOLL_CTL_ADD, client->socket, &client->epev);
-		printf("Client connected\n");
+		printf("\nClient connected\n");
 	}
 
 	return 1;

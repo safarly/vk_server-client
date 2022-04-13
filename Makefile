@@ -4,8 +4,8 @@
 #                                                                              #
 # ############################################################################ #
 
-SRCSDIR				= ./sources
-INCSDIR				= ./include
+SRCSDIR				= sources
+INCSDIR				= include
 
 SERVER				= server
 S_SRCS				= $(addprefix $(SRCSDIR)/, \

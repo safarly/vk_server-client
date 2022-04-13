@@ -1,6 +1,8 @@
 #ifndef SERVER_H
 # define SERVER_H
 
+# define _XOPEN_SOURCE	600
+
 # include <stdbool.h>
 # include <ctype.h>
 # include <limits.h>
@@ -17,7 +19,6 @@
 # include <sys/epoll.h>
 # include <sys/signalfd.h>
 # include <signal.h>
-# include <linux/limits.h>
 
 # include "colors.h"
 # include "errors.h"
@@ -26,15 +27,15 @@
 # define BUFF_SIZE		4096
 # define MAX_EVENTS		128
 # define DEFAULT_MODE	0644
-# define CONTINUE		1
-# define BREAK			2
 
 # define print_error(err)	_print_error(err, __LINE__, __FILE__)
+
+enum hints_flag	{ SERVER, CLIENT };
 
 typedef			struct file_info
 {
 	int			fd;
-	ushort		namelen;
+	unsigned	namelen;
 	size_t		size;
 }				file_info;
 
@@ -55,7 +56,7 @@ typedef					struct client_data
 //		server.c
 int		check_server_args(int argc, char **argv);
 void	run_server(int epfd, int sigfd, int server, const char *save_dir);
-int		event_receive(client_data *client, const char *save_dir);
+int		process_client_event(client_data *client, const char *save_dir, uint32_t events);
 
 //		epoll.c
 int		set_epoll_and_events(int server, int *sigfd);
@@ -80,6 +81,7 @@ int		set_socket_nonblock(int socket);
 int		create_client_socket(char *host);
 int		create_server_socket(char *port);
 char	*get_port(char *host);
+void	hints_init(struct addrinfo *hints, int flag);
 
 //		utils.c
 int		copy_data(int source, int dest);

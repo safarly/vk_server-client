@@ -16,11 +16,7 @@ int		create_server_socket(char *port)
 	struct addrinfo	hints;
 	struct addrinfo	*addresses, *ap;
 
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = AI_PASSIVE;
-	hints.ai_protocol = 0;
+	hints_init(&hints, SERVER);
 	addr_status = getaddrinfo(NULL, port, &hints, &addresses);
 	if (addr_status) {
 		print_error(gai_strerror(addr_status));
@@ -63,11 +59,7 @@ int		create_client_socket(char *host)
 		return -1;
 	}
 
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = 0;
-	hints.ai_protocol = 0;
+	hints_init(&hints, CLIENT);
 	addr_status = getaddrinfo(hostaddr, port, &hints, &addresses);
 	if (addr_status) {
 		print_error(gai_strerror(addr_status));
@@ -92,6 +84,22 @@ int		create_client_socket(char *host)
 	print_error(strerror(errno));
 
 	return -1;
+}
+
+void	hints_init(struct addrinfo *hints, int flag)
+{
+	memset(hints, 0, sizeof(struct addrinfo));
+	hints->ai_family = AF_UNSPEC;
+	hints->ai_socktype = SOCK_STREAM;
+	hints->ai_protocol = 0;
+
+	if (flag == SERVER) {
+		hints->ai_flags = AI_PASSIVE;
+	}
+
+	else if (flag == CLIENT) {
+		hints->ai_flags = 0;
+	}
 }
 
 char	*get_port(char *host)

@@ -40,7 +40,7 @@ int		copy_data(int source, int dest)
 
 int		_print_error(const char *err, int line, const char *file)
 {
-	fprintf(stderr, "%s%sError:%s %s on line %d in file %s\n", BOLD, RED, RESET, err, line, file);
+	fprintf(stderr, "%s%serror:%s %s: %s:%d\n", BOLD, RED, RESET, err, file, line);
 	return -1;
 }
 

@@ -6,7 +6,6 @@
 
 # Object files
 *.o
-*.obj
 
 # Executables
 *.out
@@ -18,3 +17,4 @@ client
 
 # Files for testing
 *test*
+*log*
