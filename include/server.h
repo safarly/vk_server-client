@@ -1,8 +1,6 @@
 #ifndef SERVER_H
 # define SERVER_H
 
-# define _XOPEN_SOURCE	600
-
 # include <stdbool.h>
 # include <ctype.h>
 # include <limits.h>
@@ -19,6 +17,7 @@
 # include <sys/stat.h>
 # include <sys/types.h>
 # include <sys/epoll.h>
+# include <arpa/inet.h>
 
 # include "colors.h"
 # include "errors.h"
@@ -53,6 +52,7 @@ typedef			struct file_flags
 typedef					struct client_data
 {
 	int					socket;
+	char				addr_str[INET_ADDRSTRLEN];
 	int					epfd;
 	struct epoll_event	epev;
 

@@ -73,7 +73,7 @@ int		create_client_socket(char *host)
 		}
 
 		if (connect(sock, ap->ai_addr, ap->ai_addrlen) != -1) {
-			printf("Client has connected to server\n");
+			puts("Client has connected to server");
 			freeaddrinfo(addresses);
 			return sock;
 		}

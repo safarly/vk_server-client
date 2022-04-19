@@ -81,7 +81,7 @@ void	run_server(int epfd, int sigfd, int server, const char *save_dir)
 			}
 
 			else if (events[i].data.fd == sigfd) {
-				printf("\nServer is shutting down...\n");
+				puts("\nServer is shutting down...");
 				close(epfd);
 				close(server);
 				terminate = true;
@@ -110,8 +110,8 @@ int		process_client_event(client_data *client, const char *save_dir)
 	}
 
 	if (client->epev.events & (EPOLLHUP | EPOLLRDHUP)) {
+		printf("Client from %s has closed connection\n", client->addr_str);
 		client_destroy(client);
-		printf("Client closed\n");
 	}
 
 	return 1;

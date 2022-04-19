@@ -65,8 +65,11 @@ int		accept_new_client(int epfd, int server)
 {
 	int		client_sock;
 	client_data	*client;
+	struct sockaddr_in	address;
+	socklen_t			addr_size = sizeof(address);
 
-	client_sock = accept(server, NULL, NULL); //accept needs to be in while loop or check if EPOLLET or EPOLL LEVEL TRIGGEREd needed
+	memset(&address, 0, addr_size);
+	client_sock = accept(server, (struct sockaddr *) &address, &addr_size); //accept needs to be in while loop or check if EPOLLET or EPOLL LEVEL TRIGGEREd needed
 	if (client_sock < 0) {
 		return -1;
 	}
@@ -82,13 +85,15 @@ int		accept_new_client(int epfd, int server)
 		return -1;
 	}
 
+	inet_ntop(AF_INET, &address.sin_addr, client->addr_str, INET_ADDRSTRLEN);
+
 	if (epoll_ctl(epfd, EPOLL_CTL_ADD, client->socket, &client->epev) < 0) {
 		close(client->socket);
 		free(client);
 		return -1;
 	}
 
-	printf("\nClient connected\n");
+	printf("\nClient connected from %s\n", client->addr_str);
 	print_verbose(VF_SOCK, client);
 
 	return 1;

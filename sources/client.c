@@ -34,9 +34,13 @@ int		main(int argc, char **argv) /* argv[1] - server addr, argv[2] - file to sen
 
 	char check_buf[1];
 	int socket_check = read(server, check_buf, 1);
-	printf("%d - check read from socket\n", socket_check);
+	// printf("%d - check read from socket\n", socket_check);
+	if (socket_check < 0) {
+		print_error(strerror(errno));
+		return EXIT_FAILURE;
+	}
 
-	printf("File was %ssuccessfully%s sent\n", GREEN, RESET);
+	printf("File was successfully sent\n");
 	close(file.fd);
 	close(server);
 
@@ -71,7 +75,7 @@ int		send_file(int server, file_info *file, char *file_path)
 	file_name = get_file_name(file_path);
 	file->namelen = strlen(file_name);
 
-	puts("Sending file to server. Please wait...");
+	puts("Sending file to server. Please wait...\n");
 
 	if (write(server, file, sizeof(file_info)) < 0) {
 		return -1;
