@@ -71,6 +71,8 @@ int		send_file(int server, file_info *file, char *file_path)
 	file_name = get_file_name(file_path);
 	file->namelen = strlen(file_name);
 
+	puts("Sending file to server. Please wait...");
+
 	if (write(server, file, sizeof(file_info)) < 0) {
 		return -1;
 	}

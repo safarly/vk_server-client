@@ -2,25 +2,26 @@
 
 int		receive_data_from_client(client_data *client, const char *save_dir)
 {
-	char	save_name[PATH_MAX];
+	char		save_name[PATH_MAX];
+	struct stat	file_stat;
 
 	memset(save_name, 0, sizeof(save_name));
 
-	if (client->file_info_read == false) {
+	if (client->fflags.info_read == false) {
 		if (get_file_info(client) < 0) {
 			return -1;
 		}
-		if (client->file_info_read == false) {
+		if (client->fflags.info_read == false) {
 			return 1;
 		}
 	}
 
-	if (client->name_read == false) {
+	if (client->fflags.name_read == false) {
 		if (handle_name(client, save_dir, save_name) < 0) {
 			return -1;
 		}
 
-		if (client->name_read == false) {
+		if (client->fflags.name_read == false) {
 			return 1;
 		}
 
@@ -34,9 +35,23 @@ int		receive_data_from_client(client_data *client, const char *save_dir)
 		return -1;
 	}
 
+	else if (client->fflags.opened == false) {
+		client->fflags.opened = true;
+	}
+
 	if (copy_data(client->socket, client->file.fd) < 0) {
 		print_error(strerror(errno));
 		return -1;
+	}
+
+	if (client->fflags.opened == true && client->fflags.saved == false) {
+		get_path(save_dir, client->name, save_name);
+		// printf("save_name %s\n", save_name);
+		stat(save_name, &file_stat);
+		if ((size_t)file_stat.st_size == client->file.size) {
+			client->fflags.saved = true;
+			printf("File \"%s\" was received and saved in \"%s\"\n", client->name, save_dir);
+		}
 	}
 
 	return 0;
@@ -67,7 +82,7 @@ int		get_file_info(client_data *client)
 
 		client->bytes_read += count;
 		if (client->bytes_read == sizeof(file_info)) {
-			client->file_info_read = true;
+			client->fflags.info_read = true;
 			client->file.fd = 0;
 			break ;
 		}
@@ -110,15 +125,9 @@ int		handle_name(client_data *client, const char *save_dir, char *save_name)
 		return -1;
 	}
 
-	strcpy(save_name, save_dir);
-
-	if (save_name[strlen(save_name) - 1] != '/') {
-		strcat(save_name, "/");
-	}
-
-	strcat(save_name, client->name);
-	printf("Path for a received file: \'%s\'\n", save_name);
-	client->name_read = true;
+	get_path(save_dir, client->name, save_name);
+	printf("Path for a file to save: \"%s\"\n", save_name);
+	client->fflags.name_read = true;
 
 	return 1;
 }

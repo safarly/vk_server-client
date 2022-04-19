@@ -42,6 +42,14 @@ typedef			struct file_info
 	size_t		size;
 }				file_info;
 
+typedef			struct file_flags
+{
+	bool		info_read;
+	bool		name_read;
+	bool		opened;
+	bool		saved;
+}				file_flags;
+
 typedef					struct client_data
 {
 	int					socket;
@@ -49,8 +57,7 @@ typedef					struct client_data
 	struct epoll_event	epev;
 
 	struct file_info	file;
-	bool				file_info_read;
-	bool				name_read;
+	struct file_flags	fflags;
 	size_t				bytes_read;
 	size_t				name_bytes_read;
 	char				name[NAME_MAX + 1];
@@ -92,6 +99,7 @@ int		_print_error(const char *err, int line, const char *file);
 void	print_verbose(int flag, client_data *client);
 int		isvalid_char(char c);
 int		check_file_name(client_data *client);
+void	get_path(const char *save_dir, char *name, char *save_name);
 int		arg_is_numerical(const char *arg);
 
 #endif

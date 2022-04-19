@@ -72,11 +72,22 @@ int		accept_new_client(int epfd, int server)
 	}
 
 	client = client_init(client_sock, epfd);
-	if (client == NULL || set_socket_nonblock(client->socket) < 0) {
+	if (client == NULL) {
 		return -1;
 	}
 
-	epoll_ctl(epfd, EPOLL_CTL_ADD, client->socket, &client->epev);
+	if (set_socket_nonblock(client->socket) < 0) {
+		close(client->socket);
+		free(client);
+		return -1;
+	}
+
+	if (epoll_ctl(epfd, EPOLL_CTL_ADD, client->socket, &client->epev) < 0) {
+		close(client->socket);
+		free(client);
+		return -1;
+	}
+
 	printf("\nClient connected\n");
 	print_verbose(VF_SOCK, client);
 
@@ -95,11 +106,8 @@ client_data	*client_init(int socket, int epfd)
 	client->epfd = epfd;
 	client->epev.data.ptr = client;
 	client->epev.events = EPOLLIN | EPOLLRDHUP | EPOLLHUP | EPOLLET;
-	client->file_info_read = false;
-	client->name_read = false;
 	client->bytes_read = 0;
 	client->name_bytes_read = 0;
-	memset(client->name, 0, sizeof(client->name));
 
 	return client;
 }
@@ -108,7 +116,7 @@ int		client_destroy(client_data *client)
 {
 	epoll_ctl(client->epfd, EPOLL_CTL_DEL, client->socket, &client->epev);
 	close(client->socket);
-	if (client->file.fd > 0) {
+	if (client->fflags.opened == true) {
 		close(client->file.fd);
 	}
 

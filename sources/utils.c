@@ -13,7 +13,7 @@ int		copy_data(int source, int dest)
 		bytes_read = read(source, buffer, sizeof(buffer));
 		if (bytes_read < 0) {
 			if (errno == EAGAIN) {
-				return 1;
+				break ;
 			}
 
 			return -1;
@@ -101,6 +101,17 @@ int		check_file_name(client_data *client)
 	}
 
 	return 1;
+}
+
+void	get_path(const char *save_dir, char *name, char *save_name)
+{
+	strcpy(save_name, save_dir);
+
+	if (save_name[strlen(save_name) - 1] != '/') {
+		strcat(save_name, "/");
+	}
+
+	strcat(save_name, name);
 }
 
 int		arg_is_numerical(const char *arg)
