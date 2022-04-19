@@ -44,6 +44,44 @@ int		_print_error(const char *err, int line, const char *file)
 	return -1;
 }
 
+void	print_verbose(int flag, client_data *client)
+{
+	if (!VERBOSE) {
+		return ;
+	}
+
+	switch (flag) {
+		case VF_EPOLLIN:
+			printf("EPOLLIN registered from socket %d\n", client->socket);
+			break ;
+
+		case VF_INFO:
+			printf("file_info was read, size of file is %zu\n", client->file.size);
+			break ;
+
+		case VF_NAME:
+			printf("name\n");
+			break ;
+
+		case VF_EAGAIN:
+			printf("%zu bytes was read from %u of file name\n",
+					client->name_bytes_read, client->file.namelen);
+			break ;
+
+		case VF_HNDL_NAME:
+			printf("in handle_name() %zu bytes was read from namelen %d\n",
+					client->name_bytes_read, client->file.namelen);
+			break ;
+
+		case VF_FILEFD:
+			printf("file fd: %d\n", client->file.fd);
+			break ;
+
+		case VF_SOCK:
+			printf("client socket: %d\n", client->socket);
+	}
+}
+
 int		isvalid_char(char c)
 {
 	return (isalpha(c) || isdigit(c) || c == '.' || c == '-' || c == '_');

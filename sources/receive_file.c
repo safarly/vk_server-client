@@ -14,7 +14,6 @@ int		receive_data_from_client(client_data *client, const char *save_dir)
 			return 1;
 		}
 	}
-	printf("file_info was read, socket %d file fd %d\n", client->socket, client->file.fd);
 
 	if (client->name_read == false) {
 		if (handle_name(client, save_dir, save_name) < 0) {
@@ -25,10 +24,8 @@ int		receive_data_from_client(client_data *client, const char *save_dir)
 			return 1;
 		}
 
-		printf("file_name was read, %s\n", save_name);
-
 		client->file.fd = open(save_name, O_CREAT | O_EXCL | O_WRONLY, DEFAULT_MODE);
-		printf("file was opened, %d is fd\nsave_name is %s\n", client->file.fd, save_name);
+		print_verbose(VF_FILEFD, client);
 	}
 
 
@@ -36,8 +33,6 @@ int		receive_data_from_client(client_data *client, const char *save_dir)
 		print_error(strerror(errno));
 		return -1;
 	}
-
-	// printf("file_info was read, socket %d file fd %d\n", client->socket, client->file.fd);
 
 	if (copy_data(client->socket, client->file.fd) < 0) {
 		print_error(strerror(errno));
@@ -80,6 +75,8 @@ int		get_file_info(client_data *client)
 		}
 	}
 
+	print_verbose(VF_INFO, client);
+
 	return 1;
 }
 
@@ -98,7 +95,7 @@ int		handle_name(client_data *client, const char *save_dir, char *save_name)
 			}
 
 			else {
-				printf("%zu bytes was read from %u\n", client->name_bytes_read, client->file.namelen);
+				print_verbose(VF_EAGAIN, client);
 				return 1;
 			}
 		}
@@ -109,7 +106,7 @@ int		handle_name(client_data *client, const char *save_dir, char *save_name)
 		}
 
 		client->name_bytes_read += count;
-		printf("in handle_name num_bytes_read %zu namelen %d\n", client->name_bytes_read, client->file.namelen);
+		print_verbose(VF_HNDL_NAME, client);
 	}
 
 	if (check_file_name(client) < 0) {
@@ -124,8 +121,7 @@ int		handle_name(client_data *client, const char *save_dir, char *save_name)
 	}
 
 	strcat(save_name, client->name);
-
-	printf("file - \'%s\'\n", save_name);
+	printf("Path for a received file: \'%s\'\n", save_name);
 	client->name_read = true;
 
 	return 1;

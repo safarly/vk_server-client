@@ -12,13 +12,13 @@
 # include <unistd.h>
 # include <fcntl.h>
 # include <stdlib.h>
+# include <netdb.h>
+# include <signal.h>
+# include <sys/signalfd.h>
 # include <sys/socket.h>
 # include <sys/stat.h>
 # include <sys/types.h>
-# include <netdb.h>
 # include <sys/epoll.h>
-# include <sys/signalfd.h>
-# include <signal.h>
 
 # include "colors.h"
 # include "errors.h"
@@ -27,10 +27,13 @@
 # define BUFF_SIZE		4096
 # define MAX_EVENTS		128
 # define DEFAULT_MODE	0644
+# define VERBOSE		0
 
 # define print_error(err)	_print_error(err, __LINE__, __FILE__)
 
-enum hints_flag	{ SERVER, CLIENT };
+enum hints_flag		{ HF_SERVER, HF_CLIENT };
+enum verbose_flag	{ VF_EPOLLIN, VF_INFO, VF_NAME, VF_EAGAIN,
+					  VF_HNDL_NAME, VF_FILEFD, VF_SOCK };
 
 typedef			struct file_info
 {
@@ -56,7 +59,7 @@ typedef					struct client_data
 //		server.c
 int		check_server_args(int argc, char **argv);
 void	run_server(int epfd, int sigfd, int server, const char *save_dir);
-int		process_client_event(client_data *client, const char *save_dir, uint32_t events);
+int		process_client_event(client_data *client, const char *save_dir);
 
 //		epoll.c
 int		set_epoll_and_events(int server, int *sigfd);
@@ -86,6 +89,7 @@ void	hints_init(struct addrinfo *hints, int flag);
 //		utils.c
 int		copy_data(int source, int dest);
 int		_print_error(const char *err, int line, const char *file);
+void	print_verbose(int flag, client_data *client);
 int		isvalid_char(char c);
 int		check_file_name(client_data *client);
 int		arg_is_numerical(const char *arg);

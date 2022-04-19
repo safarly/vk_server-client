@@ -16,7 +16,7 @@ int		create_server_socket(char *port)
 	struct addrinfo	hints;
 	struct addrinfo	*addresses, *ap;
 
-	hints_init(&hints, SERVER);
+	hints_init(&hints, HF_SERVER);
 	addr_status = getaddrinfo(NULL, port, &hints, &addresses);
 	if (addr_status) {
 		print_error(gai_strerror(addr_status));
@@ -59,7 +59,7 @@ int		create_client_socket(char *host)
 		return -1;
 	}
 
-	hints_init(&hints, CLIENT);
+	hints_init(&hints, HF_CLIENT);
 	addr_status = getaddrinfo(hostaddr, port, &hints, &addresses);
 	if (addr_status) {
 		print_error(gai_strerror(addr_status));
@@ -93,11 +93,11 @@ void	hints_init(struct addrinfo *hints, int flag)
 	hints->ai_socktype = SOCK_STREAM;
 	hints->ai_protocol = 0;
 
-	if (flag == SERVER) {
+	if (flag == HF_SERVER) {
 		hints->ai_flags = AI_PASSIVE;
 	}
 
-	else if (flag == CLIENT) {
+	else if (flag == HF_CLIENT) {
 		hints->ai_flags = 0;
 	}
 }

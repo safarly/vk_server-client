@@ -70,17 +70,15 @@ int		accept_new_client(int epfd, int server)
 	if (client_sock < 0) {
 		return -1;
 	}
-	// log(0, "blaak %f", 34); update printe_error with variadic args
 
-	else {
-		client = client_init(client_sock, epfd);
-		if (client == NULL || set_socket_nonblock(client->socket) < 0) {
-			return -1;
-		}
-
-		epoll_ctl(epfd, EPOLL_CTL_ADD, client->socket, &client->epev);
-		printf("\nClient connected\n");
+	client = client_init(client_sock, epfd);
+	if (client == NULL || set_socket_nonblock(client->socket) < 0) {
+		return -1;
 	}
+
+	epoll_ctl(epfd, EPOLL_CTL_ADD, client->socket, &client->epev);
+	printf("\nClient connected\n");
+	print_verbose(VF_SOCK, client);
 
 	return 1;
 }
@@ -110,7 +108,7 @@ int		client_destroy(client_data *client)
 {
 	epoll_ctl(client->epfd, EPOLL_CTL_DEL, client->socket, &client->epev);
 	close(client->socket);
-	if (client->file.fd != -1) {
+	if (client->file.fd > 0) {
 		close(client->file.fd);
 	}
 
