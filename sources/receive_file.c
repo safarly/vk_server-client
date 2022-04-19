@@ -52,14 +52,12 @@ int		get_file_info(client_data *client)
 			((char *)&client->file) + client->bytes_read,
 			sizeof(file_info) - client->bytes_read);
 		if (count < 0) {
-			if (errno != EAGAIN) {
-				print_error(strerror(errno));
-				return -1;
-			}
-
-			else {
+			if (errno == EAGAIN) {
 				break ;
 			}
+
+			print_error(strerror(errno));
+			return -1;
 		}
 
 		if (count == 0) {
@@ -89,15 +87,13 @@ int		handle_name(client_data *client, const char *save_dir, char *save_name)
 		count = read(client->socket, client->name + client->name_bytes_read,
 					 client->file.namelen - client->name_bytes_read);
 		if (count < 0) {
-			if (errno != EAGAIN) {
-				print_error(strerror(errno));
-				return -1;
-			}
-
-			else {
+			if (errno == EAGAIN) {
 				print_verbose(VF_EAGAIN, client);
 				return 1;
 			}
+
+			print_error(strerror(errno));
+			return -1;
 		}
 
 		if (count == 0) {
