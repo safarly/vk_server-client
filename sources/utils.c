@@ -46,7 +46,7 @@ int		_print_error(const char *err, int line, const char *file)
 
 void	print_verbose(int flag, client_data *client)
 {
-	if (!VERBOSE) {
+	if (!verbose) {
 		return ;
 	}
 

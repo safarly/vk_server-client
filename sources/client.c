@@ -1,5 +1,7 @@
 #include "server.h"
 
+bool	verbose = false;
+
 int		main(int argc, char **argv) /* argv[1] - server addr, argv[2] - file to send */
 {
 	int		server;
@@ -84,6 +86,28 @@ int		send_file(int server, file_info *file, char *file_path)
 	if (write(server, file_name, file->namelen) < 0) {
 		return -1;
 	}
+
+	// if (write(server, file, 4) < 0) {
+	// 	return -1;
+	// }
+	// usleep(500000);
+	// if (write(server, (char *)file + 4, sizeof(file_info) - 4) < 0) {
+	// 	return -1;
+	// }
+
+	// if (write(server, file_name, 3) < 0) {
+	// 	return -1;
+	// }
+	// sleep(1);
+	// if (write(server, file_name + 3, file->namelen - 3) < 0) {
+	// 	return -1;
+	// }
+
+	// for (size_t i = 0; i < file->namelen; i++) {
+	// 	write(server, file_name + i, 1);
+	// 	usleep(1000);
+	// 	write(1, file_name + i, 1);
+	// }
 
 	if (copy_data(file->fd, server) < 0) {
 		return -1;

@@ -8,7 +8,8 @@
 # define ERR_DIR		"Invalid directory"
 # define ERR_FILE		"Invalid file (is not a regular file)"
 # define ERR_PORT		"Invalid port"
-# define ERR_NAME		"Invalid characters in filename. Characters must be alphanumerical or '.', '-' and '_'"
+# define ERR_NAME		"Invalid characters in filename. \
+Characters must be alphanumerical or '.', '-' and '_'"
 # define ERR			"Something went wrong"
 
 #endif

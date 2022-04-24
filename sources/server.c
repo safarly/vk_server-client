@@ -1,14 +1,76 @@
 #include "server.h"
 
-int		main(int argc, char **argv) /* argv[1] - port, argv[2] - save dir */
+// #include <getopt.h>
+
+bool	verbose = false;
+
+int		parse_arguments(int argc, char * const argv[], const char **port, const char **save_dir)
+{
+	int		opt;
+	bool	p = false;
+	bool	d = false;
+	bool	h = false;
+
+	while ((opt = getopt(argc, argv, "hvp:d:q")) != -1)
+	{
+		switch (opt) {
+			case 'h':
+				if (argc == 2) {
+					print_usage(argv[0]);
+					h = true;
+				}
+
+				break ;
+
+			case 'p':
+				*port = optarg;
+				p = true;
+				break ;
+
+			case 'd':
+				*save_dir = optarg;
+				d = true;
+				break ;
+
+			case 'v':
+				if (p && d) {
+					printf("Verbose mode is turned on\n");
+					verbose = true;
+				}
+				break ;
+
+			default:
+				print_error("Invalid option");
+				putchar('\n');
+				print_usage(argv[0]);
+				return -1;
+		}
+	}
+printf("optind %d argc %d\n", optind, argc);
+	if ((!p || !d) && !h) {
+		print_usage(argv[0]);
+		return -1;
+	}
+
+	return 1;
+}
+
+int		main(int argc, char * const argv[]) /* argv[1] - port, argv[2] - save dir */
 {
 	int		server;
 	int		epfd;
 	int		sigfd;
+	const char	*port;
+	const char	*save_dir;
 
-	if (check_server_args(argc, argv) < 0) {
+	if (parse_arguments(argc, argv, &port, &save_dir) < 0) {
 		return EXIT_FAILURE;
 	}
+	printf("port %s save_dir %s\n", port, save_dir);
+return 1;
+	// if (check_server_args(argc, argv) < 0) {
+	// 	return EXIT_FAILURE;
+	// }
 
 	server = create_server_socket(argv[1]);
 	if (server < 0) {

@@ -1,6 +1,8 @@
 #ifndef SERVER_H
 # define SERVER_H
 
+# define _XOPEN_SOURCE	600
+
 # include <stdbool.h>
 # include <ctype.h>
 # include <limits.h>
@@ -26,9 +28,13 @@
 # define BUFF_SIZE		4096
 # define MAX_EVENTS		128
 # define DEFAULT_MODE	0644
-# define VERBOSE		0
+// # define VERBOSE		0
 
 # define print_error(err)	_print_error(err, __LINE__, __FILE__)
+# define print_usage(exec)		printf("Usage: %s [-p <port>] [-d <dir/to/save/file>]\n\n\
+Options:\n-h\tto see this message\n-v\tto turn on a verbose mode\n", exec)
+
+extern bool	verbose;
 
 enum hints_flag		{ HF_SERVER, HF_CLIENT };
 enum verbose_flag	{ VF_EPOLLIN, VF_INFO, VF_NAME, VF_EAGAIN,
